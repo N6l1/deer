@@ -38,6 +38,8 @@ const en = {
   backupDone: 'Backup saved to your downloads before the first write.', cancel: 'Cancel', ok: 'OK', confirm: 'Confirm', close: 'Close',
   planTitle: 'About to send {n} packets', planDry: 'Dry-run is on: these will only be logged.', send: 'Send',
   demoNote: 'Demo keyboard: a simulated A75 Pro (firmware 0.023). Nothing leaves this page.',
+  dryRunBanner: 'Dry-run is ON: Save only shows the bytes in the log. Nothing is sent to your keyboard.',
+  dryRunOff: 'Turn off dry-run and write for real',
 };
 
 export type Strings = typeof en;
@@ -80,6 +82,8 @@ const ar: Strings = {
   backupDone: 'حُفظت نسخة احتياطية في التنزيلات قبل أول كتابة.', cancel: 'إلغاء', ok: 'موافق', confirm: 'تأكيد', close: 'إغلاق',
   planTitle: 'سيتم إرسال {n} حزمة', planDry: 'التشغيل التجريبي مفعّل: ستُسجَّل فقط.', send: 'إرسال',
   demoNote: 'لوحة تجريبية: محاكاة لطراز A75 Pro (برنامج ثابت 0.023). لا يغادر شيء هذه الصفحة.',
+  dryRunBanner: 'التشغيل التجريبي مفعّل: الحفظ يعرض البايتات في السجل فقط ولا يُرسل شيء إلى لوحة المفاتيح.',
+  dryRunOff: 'أوقف التشغيل التجريبي واكتب فعلياً',
 };
 
 export const LANGS = { en: { name: 'English', dir: 'ltr', strings: en }, ar: { name: 'العربية', dir: 'rtl', strings: ar } } as const;

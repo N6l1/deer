@@ -49,7 +49,23 @@ export function TopBar({ onSettings }: { onSettings: () => void }) {
         </div>
       </div>
       <ConnectionStrip />
+      <DryRunBanner />
     </header>
+  );
+}
+
+/** Loud warning when a real keyboard is connected but writes are disabled. */
+function DryRunBanner() {
+  const t = useT();
+  const c = useApp((s) => s.connection);
+  const dry = useApp((s) => s.settings.dryRun);
+  const setSettings = useApp((s) => s.setSettings);
+  if (!dry || c.status !== 'connected' || c.kind === 'mock') return null;
+  return (
+    <div className="flex flex-wrap items-center gap-3 border-t border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-200">
+      <span>{t('dryRunBanner')}</span>
+      <Button variant="primary" onClick={() => setSettings({ dryRun: false })}>{t('dryRunOff')}</Button>
+    </div>
   );
 }
 
