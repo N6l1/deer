@@ -9,6 +9,7 @@ import { toHex, toHexTrimmed } from '../device/packets';
 import { Badge, Button, Card, Modal, Row, Toggle, confirmAsk, cx } from './common';
 import { Logo } from './Logo';
 import { useMouse } from '../state/mouse';
+import { useLogi } from '../state/logitech';
 
 const REPO = 'https://github.com/N6l1/deer';
 const OFFICIAL_FIRMWARE = 'https://drunkdeer.com/pages/drunkdeer-antler';
@@ -63,7 +64,11 @@ function DryRunBanner() {
   const mouse = useMouse(useShallow((s) => ({ status: s.status, kind: s.kind })));
   const dry = useApp((s) => s.settings.dryRun);
   const setSettings = useApp((s) => s.setSettings);
-  const real = tab === 'mouse' ? mouse.status === 'connected' && mouse.kind !== 'mock' : c.status === 'connected' && c.kind !== 'mock';
+  const logi = useLogi(useShallow((s) => ({ status: s.status, kind: s.kind })));
+  const real =
+    tab === 'mouse'
+      ? (mouse.status === 'connected' && mouse.kind !== 'mock') || (logi.status === 'connected' && logi.kind !== 'mock')
+      : c.status === 'connected' && c.kind !== 'mock';
   if (!dry || !real) return null;
   return (
     <div className="flex flex-wrap items-center gap-3 border-t border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-200">

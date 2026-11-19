@@ -7,6 +7,9 @@ import {
   decodeIdle, decodeLowBattery, decodePollRate, decodeSerial, decodeStages, type DpiStage, type RazerModel,
 } from '../device/razer/protocol';
 import { MockRazerMouse, MouseChannel, WebHidMouseTransport, type MouseTransport } from '../device/razer/transport';
+import { RAZER_VENDOR_ID } from '../device/razer/protocol';
+import { WebHidHidppTransport } from '../device/logitech/transport';
+import { attachLogitech } from './logitech';
 import { useApp } from './store';
 import { downloadJson } from './session';
 
@@ -99,6 +102,26 @@ export async function connectMouse() {
     const tr = await WebHidMouseTransport.request();
     if (!tr) return;
     await attach(tr);
+  } catch (e) {
+    const msg = String((e as Error).message ?? e);
+    useMouse.setState({ status: 'disconnected', error: msg });
+    app().toast(msg, 'error');
+  }
+}
+
+/** One browser picker for every supported mouse; routes to the Razer or Logitech session by vendor. */
+export async function connectAnyMouse() {
+  try {
+    const picked = await navigator.hid.requestDevice({ filters: [...WebHidMouseTransport.filters(), ...WebHidHidppTransport.filters()] });
+    if (!picked.length) return;
+    if (picked.some((d) => d.vendorId === RAZER_VENDOR_ID)) {
+      const tr = await WebHidMouseTransport.fromPicked(picked);
+      if (tr) await attach(tr);
+      return;
+    }
+    const lt = WebHidHidppTransport.fromPicked(picked);
+    if (!lt) throw new Error('The browser did not give access to the mouse\u2019s HID++ interface. Try again and pick a different entry, and close Logitech G HUB.');
+    await attachLogitech(lt);
   } catch (e) {
     const msg = String((e as Error).message ?? e);
     useMouse.setState({ status: 'disconnected', error: msg });

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useApp } from '../state/store';
 
 const en = {
-  appTagline: 'Unofficial configurator for DrunkDeer keyboards and Razer mice',
+  appTagline: 'Unofficial configurator for DrunkDeer keyboards, Razer and Logitech mice',
   tabColour: 'Colour', tabPerformance: 'Performance', tabRemap: 'Remap',
   userManual: 'User Manual', firmware: 'Firmware Download', lightMode: 'Light mode', darkMode: 'Dark mode', language: 'Language',
   connect: 'Connect keyboard', connectDemo: 'Try demo keyboard', disconnect: 'Disconnect', connected: 'Connected', disconnected: 'No keyboard',
@@ -40,8 +40,8 @@ const en = {
   demoNote: 'Demo keyboard: a simulated A75 Pro (firmware 0.023). Nothing leaves this page.',
   dryRunBanner: 'Dry-run is ON: Save only shows the bytes in the log. Nothing is sent to your keyboard.',
   dryRunOff: 'Turn off dry-run and write for real',
-  tabMouse: 'Mouse', mouseConnect: 'Connect mouse', mouseDemo: 'Try demo mouse', mouseRefresh: 'Refresh', mouseApply: 'Apply to mouse',
-  mouseNone: 'No mouse connected', mouseIntro: 'Supports the Razer Viper V4 Pro, wired or through its HyperSpeed dongle. Close Razer Synapse first.',
+  tabMouse: 'Mouse', mouseConnect: 'Connect mouse', mouseDemo: 'Demo', mouseRefresh: 'Refresh', mouseApply: 'Apply to mouse',
+  mouseNone: 'No mouse connected', mouseIntro: 'Supports the Razer Viper V4 Pro and the Logitech PRO X2 SUPERSTRIKE, wired or wireless. Close Razer Synapse and Logitech G HUB first.',
   mousePickHint: 'The browser may list the mouse several times (one per USB interface). If connecting fails, try again and pick another entry.',
   wired: 'Wired', wireless: 'Wireless (dongle)', battery: 'Battery', charging: 'charging', serial: 'Serial',
   dpiStages: 'DPI stages', activeStage: 'Active', addStage: 'Add stage', removeStage: 'Remove', lockXY: 'Same X and Y',
@@ -49,13 +49,19 @@ const en = {
   power: 'Power', sleepAfter: 'Sleep after', lowBatteryAt: 'Low-battery warning at', minutes: 'min',
   mouseChanges: '{n} change(s)', mouseNotYet: 'Not available yet: button remapping and dongle LEDs. Nobody has published their bytes for this mouse.',
   mousePlanTitle: 'About to write {n} report(s) to the mouse',
+  lightspeed: 'Wireless (LIGHTSPEED)', onboardMode: 'onboard profile', hostMode: 'software mode', hitsTitle: 'SUPERSTRIKE click tuning',
+  hitsIntro: 'Tune each main button separately: how deep the click registers, how quickly it re-arms after you start releasing, and how strong the haptic click feels.',
+  copyLeftRight: 'Copy left → right', leftButton: 'Left button', rightButton: 'Right button', hitsActuation: 'Actuation point', shallow: 'shallow (fast)', deep: 'deep',
+  hitsRapid: 'Rapid trigger', hitsHaptics: 'Click haptics', off: 'off', dpiAndRate: 'DPI and report rate',
+  logiOnboardNote: 'The mouse uses its onboard profile, so DPI and report rate come from that profile (set in G HUB). Changing them here would need switching the mouse to software mode, which DeerTune does not do yet. They are shown above, read-only.',
+  logiNotYet: 'Not available yet: DPI and report-rate editing, button remapping, onboard profile editing.',
 };
 
 export type Strings = typeof en;
 export type StringKey = keyof Strings;
 
 const ar: Strings = {
-  appTagline: 'أداة إعداد غير رسمية للوحات مفاتيح DrunkDeer وفئران Razer',
+  appTagline: 'أداة إعداد غير رسمية للوحات مفاتيح DrunkDeer وفئران Razer و Logitech',
   tabColour: 'الألوان', tabPerformance: 'الأداء', tabRemap: 'إعادة التعيين',
   userManual: 'دليل المستخدم', firmware: 'تنزيل البرنامج الثابت', lightMode: 'الوضع الفاتح', darkMode: 'الوضع الداكن', language: 'اللغة',
   connect: 'توصيل لوحة المفاتيح', connectDemo: 'جرّب لوحة تجريبية', disconnect: 'قطع الاتصال', connected: 'متصل', disconnected: 'لا توجد لوحة مفاتيح',
@@ -93,8 +99,8 @@ const ar: Strings = {
   demoNote: 'لوحة تجريبية: محاكاة لطراز A75 Pro (برنامج ثابت 0.023). لا يغادر شيء هذه الصفحة.',
   dryRunBanner: 'التشغيل التجريبي مفعّل: الحفظ يعرض البايتات في السجل فقط ولا يُرسل شيء إلى لوحة المفاتيح.',
   dryRunOff: 'أوقف التشغيل التجريبي واكتب فعلياً',
-  tabMouse: 'الفأرة', mouseConnect: 'توصيل الفأرة', mouseDemo: 'جرّب فأرة تجريبية', mouseRefresh: 'تحديث', mouseApply: 'تطبيق على الفأرة',
-  mouseNone: 'لا توجد فأرة متصلة', mouseIntro: 'يدعم Razer Viper V4 Pro سلكياً أو عبر دونجل HyperSpeed. أغلق Razer Synapse أولاً.',
+  tabMouse: 'الفأرة', mouseConnect: 'توصيل الفأرة', mouseDemo: 'تجربة', mouseRefresh: 'تحديث', mouseApply: 'تطبيق على الفأرة',
+  mouseNone: 'لا توجد فأرة متصلة', mouseIntro: 'يدعم Razer Viper V4 Pro و Logitech PRO X2 SUPERSTRIKE سلكياً أو لاسلكياً. أغلق Razer Synapse و Logitech G HUB أولاً.',
   mousePickHint: 'قد يعرض المتصفح الفأرة عدة مرات (مرة لكل واجهة USB). إذا فشل الاتصال فأعد المحاولة واختر عنصراً آخر.',
   wired: 'سلكي', wireless: 'لاسلكي (دونجل)', battery: 'البطارية', charging: 'يشحن', serial: 'الرقم التسلسلي',
   dpiStages: 'مراحل DPI', activeStage: 'النشطة', addStage: 'إضافة مرحلة', removeStage: 'حذف', lockXY: 'نفس قيمة X و Y',
@@ -102,6 +108,12 @@ const ar: Strings = {
   power: 'الطاقة', sleepAfter: 'السكون بعد', lowBatteryAt: 'تنبيه البطارية المنخفضة عند', minutes: 'د',
   mouseChanges: '{n} تغيير', mouseNotYet: 'غير متاح بعد: إعادة تعيين الأزرار وأضواء الدونجل. لم تُنشر بايتاتها لهذه الفأرة بعد.',
   mousePlanTitle: 'سيتم كتابة {n} تقرير إلى الفأرة',
+  lightspeed: 'لاسلكي (LIGHTSPEED)', onboardMode: 'الملف المدمج', hostMode: 'وضع البرنامج', hitsTitle: 'ضبط نقرة SUPERSTRIKE',
+  hitsIntro: 'اضبط كل زر رئيسي على حدة: عمق تسجيل النقرة، وسرعة إعادة التفعيل عند بدء التحرير، وقوة النقرة اللمسية.',
+  copyLeftRight: 'نسخ اليسار ← اليمين', leftButton: 'الزر الأيسر', rightButton: 'الزر الأيمن', hitsActuation: 'نقطة التفعيل', shallow: 'سطحي (سريع)', deep: 'عميق',
+  hitsRapid: 'الزناد السريع', hitsHaptics: 'اهتزاز النقرة', off: 'إيقاف', dpiAndRate: 'DPI ومعدل التقارير',
+  logiOnboardNote: 'تستخدم الفأرة ملفها المدمج، لذا يأتي DPI ومعدل التقارير من ذلك الملف (يُضبط في G HUB). تغييرهما هنا يتطلب تحويل الفأرة إلى وضع البرنامج، وهذا غير مدعوم في DeerTune بعد. يظهران أعلاه للقراءة فقط.',
+  logiNotYet: 'غير متاح بعد: تعديل DPI ومعدل التقارير، إعادة تعيين الأزرار، تعديل الملف المدمج.',
 };
 
 export const LANGS = { en: { name: 'English', dir: 'ltr', strings: en }, ar: { name: 'العربية', dir: 'rtl', strings: ar } } as const;

@@ -49,7 +49,11 @@ Pick an effect, then set brightness (0–9) and speed (0–9). Effects can only 
 
 Choose a layer (Base, Fn, Fn2), click a key, then pick what it should send: letters, numbers, symbols, F-keys, navigation, keypad, modifiers, media, mouse, keyboard functions, or Disable. Click the knob to assign its actions. **Reset key** and **Reset all remaps** undo changes.
 
-## Mouse (Razer Viper V4 Pro)
+## Mouse
+
+Supported: **Razer Viper V4 Pro** and **Logitech PRO X2 SUPERSTRIKE**. One **Connect mouse** button handles both.
+
+### Razer Viper V4 Pro
 
 1. Close Razer Synapse, then open the **Mouse** tab and click **Connect mouse**. Choose the Viper V4 Pro, either the cable (wired) or the HyperSpeed dongle (wireless).
 2. The browser may list the mouse several times, once per USB interface. If connecting fails, click Connect again and pick a different entry.
@@ -57,6 +61,18 @@ Choose a layer (Base, Fn, Fn2), click a key, then pick what it should send: lett
 4. Edit any of them, then click **Apply to mouse**. You'll see every report before it's sent, and dry-run works the same as for the keyboard. After a real write, DeerTune reads the settings back and tells you whether they match.
 
 If a wireless mouse is asleep it won't answer. Move it and press **Refresh**. Button remapping isn't available yet.
+
+### Logitech PRO X2 SUPERSTRIKE
+
+1. **Quit Logitech G HUB** completely (including from the system tray). While it runs, it holds the mouse and every request fails with "busy".
+2. Click **Connect mouse** and pick the LIGHTSPEED receiver (or the mouse itself if it's plugged in with the cable).
+3. **SUPERSTRIKE click tuning** for each main button:
+   - **Actuation point** 1–10: 1 is the shallowest, fastest click; 10 is the deepest.
+   - **Rapid trigger** 1–5.
+   - **Click haptics** 0–5, where 0 turns the haptic click off.
+4. Click **Apply to mouse**. DeerTune reads the values back afterwards.
+
+DPI, report rate and the onboard-profile state are shown but can't be changed yet. The mouse runs from its onboard profile, and changing those values would mean switching it to software mode.
 
 ## Profiles
 

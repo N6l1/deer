@@ -1,29 +1,36 @@
 import { useState } from 'react';
-import { useMouse, connectMouse, connectMockMouse, disconnectMouse, refreshMouse, planMouseWrites, applyMouse, type PlannedMouseWrite } from '../state/mouse';
+import { useMouse, connectAnyMouse, connectMockMouse, disconnectMouse, refreshMouse, planMouseWrites, applyMouse, type PlannedMouseWrite } from '../state/mouse';
 import { useApp } from '../state/store';
 import { useT } from '../i18n';
 import { isWebHidSupported } from '../device/webhid';
 import { toHexTrimmed } from '../device/packets';
 import { lowBatteryPercent, lowBatteryRaw } from '../device/razer/protocol';
 import { Badge, Button, Card, Modal, Slider, Toggle, cx } from './common';
+import { useLogi, connectMockLogitech } from '../state/logitech';
+import { LogitechPanel } from './LogitechPanel';
 
 export function MouseTab() {
   const t = useT();
   const m = useMouse();
+  const logi = useLogi((x) => x.status);
   const dry = useApp((s) => s.settings.dryRun);
   const [plan, setPlan] = useState<PlannedMouseWrite[] | null>(null);
   const [lock, setLock] = useState(true);
   const pending = m.draft ? planMouseWrites() : [];
 
+  if (logi === 'connected') return <LogitechPanel />;
   if (m.status !== 'connected' || !m.model || !m.draft) {
     return (
       <div className="mx-auto flex max-w-xl flex-col items-center gap-4 py-16 text-center">
         <MouseIcon />
-        <h2 className="text-lg font-semibold">{m.status === 'connecting' ? t('connecting') : t('mouseNone')}</h2>
+        <h2 className="text-lg font-semibold">{m.status === 'connecting' || logi === 'connecting' ? t('connecting') : t('mouseNone')}</h2>
         <p className="text-sm text-mute">{t('mouseIntro')}</p>
         <div className="flex gap-2">
-          <Button variant="primary" disabled={!isWebHidSupported() || m.status === 'connecting'} onClick={() => void connectMouse()}>{t('mouseConnect')}</Button>
-          <Button variant="solid" onClick={() => void connectMockMouse()}>{t('mouseDemo')}</Button>
+          <Button variant="primary" disabled={!isWebHidSupported() || m.status === 'connecting' || logi === 'connecting'} onClick={() => void connectAnyMouse()}>{t('mouseConnect')}</Button>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button variant="solid" onClick={() => void connectMockMouse()}>{t('mouseDemo')}: Razer Viper V4 Pro</Button>
+          <Button variant="solid" onClick={() => void connectMockLogitech()}>{t('mouseDemo')}: Logitech PRO X2 SUPERSTRIKE</Button>
         </div>
         <p className="text-xs text-mute">{t('mousePickHint')}</p>
         {m.error && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">{m.error}</p>}

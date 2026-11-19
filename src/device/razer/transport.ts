@@ -43,6 +43,10 @@ export class WebHidMouseTransport implements MouseTransport {
   /** Throws a readable error when the browser hides the control interface. */
   static async request(): Promise<WebHidMouseTransport | null> {
     const picked = await navigator.hid.requestDevice({ filters: WebHidMouseTransport.filters() });
+    return WebHidMouseTransport.fromPicked(picked);
+  }
+
+  static async fromPicked(picked: HIDDevice[]): Promise<WebHidMouseTransport | null> {
     if (!picked.length) return null;
     const control = picked.find(isControl) ?? (await navigator.hid.getDevices()).find((d) => d.vendorId === RAZER_VENDOR_ID && isControl(d));
     if (!control) {
