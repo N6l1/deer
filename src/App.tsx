@@ -6,6 +6,7 @@ import { isWebHidSupported } from './device/webhid';
 import { PerformanceTab } from './ui/PerformanceTab';
 import { ColourTab } from './ui/ColourTab';
 import { RemapTab } from './ui/RemapTab';
+import { MouseTab } from './ui/MouseTab';
 import { SaveBar, SettingsDrawer, Sidebar, Toasts, TopBar } from './ui/Shell';
 
 export default function App() {
@@ -32,15 +33,16 @@ export default function App() {
     <div className="flex min-h-full flex-col">
       <TopBar onSettings={() => setSettingsOpen(true)} />
       <main className="flex flex-1 flex-col gap-4 p-4 pb-24 lg:flex-row">
-        <Sidebar />
+        {tab !== 'mouse' && <Sidebar />}
         <div className="min-w-0 flex-1">
           {tab === 'performance' && <PerformanceTab />}
           {tab === 'colour' && <ColourTab />}
           {tab === 'remap' && <RemapTab />}
+          {tab === 'mouse' && <MouseTab />}
         </div>
       </main>
       <footer className="px-4 pb-20 text-center text-[11px] text-mute">{t('disclaimer')}</footer>
-      <SaveBar />
+      {tab !== 'mouse' && <SaveBar />}
       <Toasts />
       {settingsOpen && <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setSettingsOpen(false)} />}
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />

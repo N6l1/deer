@@ -1,6 +1,6 @@
 # DeerTune
 
-**An open-source configurator for DrunkDeer magnetic keyboards that runs in your browser.** It talks to the keyboard directly over WebHID, installs as an offline app, and keeps your profiles on your own machine.
+**An open-source configurator for DrunkDeer magnetic keyboards (and the Razer Viper V4 Pro mouse) that runs in your browser.** It talks to the keyboard directly over WebHID, installs as an offline app, and keeps your profiles on your own machine.
 
 **Live app:** https://n6l1.github.io/deer/ · [User manual](docs/USER_MANUAL.md) · [Protocol notes](docs/PROTOCOL.md) · [Help verify the protocol](docs/CAPTURE.md)
 
@@ -18,6 +18,7 @@
 | Custom per-key RGB | Brush with colour wheel and hex input, fill all, eyedropper | ✅ |
 | Last Win (SOCD), Release Dual-Trigger | Pair editors, thresholds | 🧪 experimental |
 | Remap | Base / Fn / Fn2 layers; letters, modifiers, F-keys, media, mouse, keyboard functions, disable; knob | 🧪 experimental |
+| Mouse tab | Razer Viper V4 Pro, wired or via dongle: battery, DPI stages (up to 5, X/Y), polling rate up to 8 kHz, sleep timer, low-battery warning; read back after every write | ✅ (button remap not yet) |
 | Profiles | Add, rename, duplicate, delete, import/export JSON (also imports official driver profiles), IndexedDB storage | ✅ |
 | App | Installable offline PWA, dark and light themes, English and Arabic (RTL) | ✅ |
 | Safety | Opcode allow-list, value range checks, dry-run, packet preview before every save, automatic pre-write backup | ✅ |
@@ -31,6 +32,7 @@
 | A75 Pro | ✅ | exact | ✅ |
 | A75 | ✅ | exact | ✅ |
 | G65, G60, G75 | ✅ | approximate | read-only until someone tests one |
+| Razer Viper V4 Pro (mouse) | ✅ | — | ✅ DPI, polling, power. See [PROTOCOL-RAZER.md](docs/PROTOCOL-RAZER.md) |
 
 ## Development
 
@@ -47,6 +49,7 @@ Click **Try demo keyboard** to work on the UI without hardware (`src/device/mock
 
 ```
 src/device/        all USB/HID knowledge; no React
+  razer/           Razer mouse protocol, guard, feature-report transport, mock
   transport.ts     KeyboardTransport interface + Channel (allow-list, dry-run, log, echo matching, backup hook)
   guard.ts         opcode allow-list and per-packet value checks
   packets.ts       packet builders and parsers
@@ -72,6 +75,7 @@ The protocol knowledge comes from these projects; thank you to their authors:
 
 - [2xxn/cli-drunkdeer](https://github.com/2xxn/cli-drunkdeer) (Apache-2.0): report ID, opcodes, identity, actuation packets, LED modes, key presets.
 - [svumo/DrunkDeer-Control](https://github.com/svumo/DrunkDeer-Control) (MIT): A75 Pro hardware captures, the mm × 100 scale, mode-switch byte map, Last Win / Dual-Trigger / custom RGB formats, and safety warnings.
+- [openrazer/openrazer](https://github.com/openrazer/openrazer) (GPL-2.0, facts only, no code copied) and the Viper V4 Pro capture in [openrazer#2760](https://github.com/openrazer/openrazer/issues/2760): Razer report format and mouse commands.
 - [xuckless/deerctl](https://github.com/xuckless/deerctl) (MIT): model table, default keymaps, remap target encoding, per-model precision cutoffs. `src/device/data/models.json` is derived from its `models.json`.
 
 DeerTune's code is original and licensed under Apache-2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)). "DrunkDeer" is a trademark of its owner. The DeerTune name and logo are this project's own.

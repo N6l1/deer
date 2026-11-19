@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useApp } from '../state/store';
 
 const en = {
-  appTagline: 'Unofficial configurator for DrunkDeer keyboards',
+  appTagline: 'Unofficial configurator for DrunkDeer keyboards and Razer mice',
   tabColour: 'Colour', tabPerformance: 'Performance', tabRemap: 'Remap',
   userManual: 'User Manual', firmware: 'Firmware Download', lightMode: 'Light mode', darkMode: 'Dark mode', language: 'Language',
   connect: 'Connect keyboard', connectDemo: 'Try demo keyboard', disconnect: 'Disconnect', connected: 'Connected', disconnected: 'No keyboard',
@@ -40,13 +40,22 @@ const en = {
   demoNote: 'Demo keyboard: a simulated A75 Pro (firmware 0.023). Nothing leaves this page.',
   dryRunBanner: 'Dry-run is ON: Save only shows the bytes in the log. Nothing is sent to your keyboard.',
   dryRunOff: 'Turn off dry-run and write for real',
+  tabMouse: 'Mouse', mouseConnect: 'Connect mouse', mouseDemo: 'Try demo mouse', mouseRefresh: 'Refresh', mouseApply: 'Apply to mouse',
+  mouseNone: 'No mouse connected', mouseIntro: 'Supports the Razer Viper V4 Pro, wired or through its HyperSpeed dongle. Close Razer Synapse first.',
+  mousePickHint: 'The browser may list the mouse several times (one per USB interface). If connecting fails, try again and pick another entry.',
+  wired: 'Wired', wireless: 'Wireless (dongle)', battery: 'Battery', charging: 'charging', serial: 'Serial',
+  dpiStages: 'DPI stages', activeStage: 'Active', addStage: 'Add stage', removeStage: 'Remove', lockXY: 'Same X and Y',
+  pollRate: 'Polling rate', pollHint: '2000 Hz and above use more CPU and battery. 8000 Hz on wireless needs the HyperSpeed dongle.',
+  power: 'Power', sleepAfter: 'Sleep after', lowBatteryAt: 'Low-battery warning at', minutes: 'min',
+  mouseChanges: '{n} change(s)', mouseNotYet: 'Not available yet: button remapping and dongle LEDs. Nobody has published their bytes for this mouse.',
+  mousePlanTitle: 'About to write {n} report(s) to the mouse',
 };
 
 export type Strings = typeof en;
 export type StringKey = keyof Strings;
 
 const ar: Strings = {
-  appTagline: 'أداة إعداد غير رسمية للوحات مفاتيح DrunkDeer',
+  appTagline: 'أداة إعداد غير رسمية للوحات مفاتيح DrunkDeer وفئران Razer',
   tabColour: 'الألوان', tabPerformance: 'الأداء', tabRemap: 'إعادة التعيين',
   userManual: 'دليل المستخدم', firmware: 'تنزيل البرنامج الثابت', lightMode: 'الوضع الفاتح', darkMode: 'الوضع الداكن', language: 'اللغة',
   connect: 'توصيل لوحة المفاتيح', connectDemo: 'جرّب لوحة تجريبية', disconnect: 'قطع الاتصال', connected: 'متصل', disconnected: 'لا توجد لوحة مفاتيح',
@@ -84,6 +93,15 @@ const ar: Strings = {
   demoNote: 'لوحة تجريبية: محاكاة لطراز A75 Pro (برنامج ثابت 0.023). لا يغادر شيء هذه الصفحة.',
   dryRunBanner: 'التشغيل التجريبي مفعّل: الحفظ يعرض البايتات في السجل فقط ولا يُرسل شيء إلى لوحة المفاتيح.',
   dryRunOff: 'أوقف التشغيل التجريبي واكتب فعلياً',
+  tabMouse: 'الفأرة', mouseConnect: 'توصيل الفأرة', mouseDemo: 'جرّب فأرة تجريبية', mouseRefresh: 'تحديث', mouseApply: 'تطبيق على الفأرة',
+  mouseNone: 'لا توجد فأرة متصلة', mouseIntro: 'يدعم Razer Viper V4 Pro سلكياً أو عبر دونجل HyperSpeed. أغلق Razer Synapse أولاً.',
+  mousePickHint: 'قد يعرض المتصفح الفأرة عدة مرات (مرة لكل واجهة USB). إذا فشل الاتصال فأعد المحاولة واختر عنصراً آخر.',
+  wired: 'سلكي', wireless: 'لاسلكي (دونجل)', battery: 'البطارية', charging: 'يشحن', serial: 'الرقم التسلسلي',
+  dpiStages: 'مراحل DPI', activeStage: 'النشطة', addStage: 'إضافة مرحلة', removeStage: 'حذف', lockXY: 'نفس قيمة X و Y',
+  pollRate: 'معدل الاستقصاء', pollHint: '2000 هرتز فأكثر يستهلك معالجاً وبطارية أكثر. 8000 هرتز لاسلكياً يحتاج دونجل HyperSpeed.',
+  power: 'الطاقة', sleepAfter: 'السكون بعد', lowBatteryAt: 'تنبيه البطارية المنخفضة عند', minutes: 'د',
+  mouseChanges: '{n} تغيير', mouseNotYet: 'غير متاح بعد: إعادة تعيين الأزرار وأضواء الدونجل. لم تُنشر بايتاتها لهذه الفأرة بعد.',
+  mousePlanTitle: 'سيتم كتابة {n} تقرير إلى الفأرة',
 };
 
 export const LANGS = { en: { name: 'English', dir: 'ltr', strings: en }, ar: { name: 'العربية', dir: 'rtl', strings: ar } } as const;
