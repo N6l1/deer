@@ -2,7 +2,7 @@
 
 import {
   buildRequest, findLogiModel, FEATURE, HIDPP_ERRORS, HIDPP_USAGE_PAGE, LOGI_VENDOR_ID, LONG_PAYLOAD, LONG_REPORT_ID, parseReply,
-  PRO_X2_SUPERSTRIKE, SWID, type FeatureName, type HitsCaps, type LogiModel,
+  LOGI_MODELS, SWID, type FeatureName, type HitsCaps, type LogiModel,
 } from './hidpp';
 import { toHexTrimmed } from '../packets';
 import type { LogEntry } from '../transport';
@@ -32,7 +32,7 @@ export class WebHidHidppTransport implements HidppTransport {
     return this.device.productName;
   }
   static filters(): HIDDeviceFilter[] {
-    return PRO_X2_SUPERSTRIKE.map((m) => ({ vendorId: LOGI_VENDOR_ID, productId: m.productId, usagePage: HIDPP_USAGE_PAGE }));
+    return LOGI_MODELS.map((m) => ({ vendorId: LOGI_VENDOR_ID, productId: m.productId, usagePage: HIDPP_USAGE_PAGE }));
   }
   static fromPicked(list: HIDDevice[]): WebHidHidppTransport | null {
     const d = list.find((x) => x.vendorId === LOGI_VENDOR_ID && isHidpp(x));
@@ -61,18 +61,33 @@ export class WebHidHidppTransport implements HidppTransport {
 
 // ---- Mock ---------------------------------------------------------------------------------------
 
-/** Simulated PRO X2 SUPERSTRIKE behind its LIGHTSPEED receiver. Feature indexes match Solaar's dump. */
+/**
+ * Simulated Logitech mouse behind the LIGHTSPEED receiver. `superstrike` adds the 0x1B0C click tuning;
+ * otherwise it behaves like a PRO X SUPERLIGHT 2 (Solaar dump: 2202 @9, 8061 @11, 8100 @12).
+ * Like the real mice, report-rate writes are ignored while an onboard profile is active.
+ */
 export class MockSuperstrike implements HidppTransport {
   readonly kind = 'mock';
-  readonly productName = 'DeerTune Mock PRO X2 SUPERSTRIKE';
+  readonly productName: string;
   readonly sent: Uint8Array[] = [];
-  readonly features: Record<number, number> = { 0x0005: 3, 0x1004: 6, 0x2202: 9, 0x1b0c: 12, 0x8061: 13, 0x8100: 14 };
+  readonly features: Record<number, number>;
+  readonly name: string;
   hits = [
     [0x14, 0x0d, 0x0c],
     [0x14, 0x0d, 0x0c],
   ];
+  rate = 3;
+  mode = 1;
+  profile = 1;
   private subs = new Set<(d: Uint8Array) => void>();
-  constructor(readonly productId = 0xc54d) {}
+  constructor(
+    readonly productId = 0xc54d,
+    readonly superstrike = true,
+  ) {
+    this.features = superstrike ? { 0x0005: 3, 0x1004: 6, 0x2202: 9, 0x1b0c: 12, 0x8061: 13, 0x8100: 14 } : { 0x0005: 3, 0x1004: 6, 0x2202: 9, 0x8061: 11, 0x8100: 12 };
+    this.name = superstrike ? 'PRO X2 SUPERSTRIKE' : 'PRO X 2';
+    this.productName = `DeerTune Mock ${superstrike ? 'PRO X2 SUPERSTRIKE' : 'PRO X SUPERLIGHT 2'}`;
+  }
   async open() {}
   async close() {}
   onDisconnect() {
@@ -98,16 +113,31 @@ export class MockSuperstrike implements HidppTransport {
     };
     const id = Number(Object.entries(this.features).find(([, i]) => i === feat)?.[0] ?? -1);
     if (feat === 0 && fn === 0) return reply([this.features[(p[3]! << 8) | p[4]!] ?? 0, 0, 0]);
-    const name = 'PRO X2 SUPERSTRIKE';
+    const name = this.name;
     if (id === 0x0005 && fn === 0) return reply([name.length]);
     if (id === 0x0005 && fn === 1) return reply([...name.slice(p[3]!, p[3]! + 16)].map((c) => c.charCodeAt(0)));
     if (id === 0x1004 && fn === 1) return reply([82, 0x04, 0x00]);
     if (id === 0x2202 && fn === 5) return reply([0, 0x03, 0x20, 0, 0, 0x03, 0x20, 0, 0, 2]);
-    if (id === 0x8061 && fn === 2) return reply([3]);
-    if (id === 0x8100 && fn === 2) return reply([1]);
-    if (id === 0x1b0c && fn === 0) return reply([0x00, 0x03, 0x28, 0x14, 0x14, 0x01]);
-    if (id === 0x1b0c && fn === 2) return reply([p[3]!, ...this.hits[p[3]!]!]);
-    if (id === 0x1b0c && fn === 1) {
+    if (id === 0x8061 && fn === 1) return reply([0x00, 0x7f]);
+    if (id === 0x8061 && fn === 2) return reply([this.rate]);
+    if (id === 0x8061 && fn === 3) {
+      if (this.mode === 2) this.rate = p[3]!;
+      return reply([]);
+    }
+    if (id === 0x8100 && fn === 2) return reply([this.mode]);
+    if (id === 0x8100 && fn === 4) return reply([0, this.profile]);
+    if (id === 0x8100 && fn === 1) {
+      this.mode = p[3]!;
+      if (this.mode === 1) this.rate = 3; // the onboard profile's own rate comes back
+      return reply([]);
+    }
+    if (id === 0x8100 && fn === 3) {
+      this.profile = p[4]!;
+      return reply([]);
+    }
+    if (this.superstrike && id === 0x1b0c && fn === 0) return reply([0x00, 0x03, 0x28, 0x14, 0x14, 0x01]);
+    if (this.superstrike && id === 0x1b0c && fn === 2) return reply([p[3]!, ...this.hits[p[3]!]!]);
+    if (this.superstrike && id === 0x1b0c && fn === 1) {
       this.hits[p[3]!] = [p[4]!, p[5]!, p[6]!];
       return reply([p[3]!, p[4]!, p[5]!, p[6]!]);
     }
@@ -126,8 +156,8 @@ const READS: Partial<Record<FeatureName, Record<number, string>>> = {
   UNIFIED_BATTERY: { 0: 'battery capabilities', 1: 'battery status' },
   SUPERSTRIKE_TUNING: { 0: 'click tuning capabilities', 2: 'click tuning' },
   EXTENDED_DPI: { 5: 'DPI' },
-  EXTENDED_REPORT_RATE: { 2: 'report rate' },
-  ONBOARD_PROFILES: { 2: 'onboard mode' },
+  EXTENDED_REPORT_RATE: { 1: 'supported report rates', 2: 'report rate' },
+  ONBOARD_PROFILES: { 2: 'onboard mode', 4: 'active onboard profile' },
 };
 
 export function checkHidpp(p: Uint8Array, dev: number, featureIndex: Partial<Record<FeatureName, number>>, caps: HitsCaps | null): HidppGuardResult {
@@ -157,6 +187,22 @@ export function checkHidpp(p: Uint8Array, dev: number, featureIndex: Partial<Rec
       (hap & 3) === 0 && hap >> 2 <= caps.maxHaptics &&
       params.subarray(4).every((b) => b === 0);
     return ok ? { ok: true, cls: 'write', label: `click tuning (${btn === 0 ? 'left' : 'right'})` } : { ok: false, reason: 'click tuning values out of range' };
+  }
+  if (name === 'EXTENDED_REPORT_RATE' && fn === 3) {
+    return (params[0] ?? 99) <= 6 && params.subarray(1).every((b) => b === 0)
+      ? { ok: true, cls: 'write', label: `report rate ${125 * 2 ** (params[0] ?? 0)} Hz` }
+      : { ok: false, reason: 'report rate index must be 0..6' };
+  }
+  if (name === 'ONBOARD_PROFILES' && fn === 1) {
+    return (params[0] === 1 || params[0] === 2) && params.subarray(1).every((b) => b === 0)
+      ? { ok: true, cls: 'write', label: params[0] === 2 ? 'switch to software (host) mode' : 'switch to onboard profiles' }
+      : { ok: false, reason: 'onboard mode must be 1 (onboard) or 2 (host)' };
+  }
+  if (name === 'ONBOARD_PROFILES' && fn === 3) {
+    const prof = ((params[0] ?? 0) << 8) | (params[1] ?? 0);
+    return prof >= 1 && prof <= 5 && params.subarray(2).every((b) => b === 0)
+      ? { ok: true, cls: 'write', label: `activate onboard profile ${prof}` }
+      : { ok: false, reason: 'onboard profile must be 1..5' };
   }
   return { ok: false, reason: `${name} function ${fn} is not on the allow-list` };
 }

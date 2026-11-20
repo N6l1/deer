@@ -1,6 +1,6 @@
 # DeerTune
 
-**An open-source configurator for DrunkDeer and MADLIONS magnetic keyboards (plus the Razer Viper V4 Pro and Logitech PRO X2 SUPERSTRIKE mice) that runs in your browser.** It talks to the keyboard directly over WebHID, installs as an offline app, and keeps your profiles on your own machine.
+**An open-source configurator for DrunkDeer and MADLIONS magnetic keyboards (plus the Razer Viper V4 Pro, Logitech PRO X2 SUPERSTRIKE and PRO X SUPERLIGHT 2 mice) that runs in your browser.** It talks to the keyboard directly over WebHID, installs as an offline app, and keeps your profiles on your own machine.
 
 **Live app:** https://n6l1.github.io/deer/ · [User manual](docs/USER_MANUAL.md) · [Protocol notes](docs/PROTOCOL.md) · [Help verify the protocol](docs/CAPTURE.md)
 
@@ -20,7 +20,7 @@
 | Remap | Base / Fn / Fn2 layers; letters, modifiers, F-keys, media, mouse, keyboard functions, disable; knob | 🧪 experimental |
 | MAD 68 HE tab | MADLIONS MAD68 HE: per-key actuation (0.05–3.40 mm) and rapid trigger, live key travel, Windows / Mac layout switch, SOCD pairs (last input / key 1 / key 2 / neutral), lighting effect / brightness / speed / colour, saved to flash with read-back | ✅ on 1058 RGB; other variants experimental |
 | Mouse tab | Razer Viper V4 Pro, wired or via dongle: battery, DPI stages (up to 5, X/Y), polling rate up to 8 kHz, sleep timer, low-battery warning; read back after every write | ✅ (button remap not yet) |
-| Logitech PRO X2 SUPERSTRIKE | SUPERSTRIKE click tuning per button (actuation 1–10, rapid trigger 1–5, haptics 0–5), battery; DPI / report rate / onboard mode shown read-only | ✅ (DPI editing not yet) |
+| Logitech PRO X2 SUPERSTRIKE / PRO X SUPERLIGHT 2 | Polling rate (125 Hz–8 kHz, as the mouse supports) with onboard ↔ software mode switch; SUPERSTRIKE click tuning per button (actuation 1–10, rapid trigger 1–5, haptics 0–5); battery; DPI shown read-only | ✅ (DPI editing not yet) |
 | Profiles | Add, rename, duplicate, delete, import/export JSON (also imports official driver profiles), IndexedDB storage | ✅ |
 | App | Installable offline PWA, dark and light themes, English and Arabic (RTL) | ✅ |
 | Safety | Opcode allow-list, value range checks, dry-run, packet preview before every save, automatic pre-write backup | ✅ |
@@ -36,7 +36,8 @@
 | G65, G60, G75 | ✅ | approximate | read-only until someone tests one |
 | Razer Viper V4 Pro (mouse) | ✅ | — | ✅ DPI, polling, power. See [PROTOCOL-RAZER.md](docs/PROTOCOL-RAZER.md) |
 | MADLIONS MAD68 HE (RGB / Lightless / Ultra / Limited) | ✅ | exact | ✅ RGB (1058); others behind experimental. See [PROTOCOL-MADLIONS.md](docs/PROTOCOL-MADLIONS.md) |
-| Logitech PRO X2 SUPERSTRIKE (mouse) | ✅ | — | ✅ click tuning. See [PROTOCOL-LOGITECH.md](docs/PROTOCOL-LOGITECH.md) |
+| Logitech PRO X2 SUPERSTRIKE (mouse) | ✅ | — | ✅ click tuning, polling rate. See [PROTOCOL-LOGITECH.md](docs/PROTOCOL-LOGITECH.md) |
+| Logitech PRO X SUPERLIGHT 2 (mouse) | ✅ | — | ✅ polling rate |
 
 ## Development
 

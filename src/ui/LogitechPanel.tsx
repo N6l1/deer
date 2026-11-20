@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLogi, refreshLogitech, disconnectLogitech, planLogitech, applyLogitech, type PlannedLogiWrite } from '../state/logitech';
+import { useLogi, refreshLogitech, disconnectLogitech, planLogitech, planLogiMode, applyLogitech, type PlannedLogiWrite } from '../state/logitech';
 import { useApp } from '../state/store';
 import { useT } from '../i18n';
 import { toHexTrimmed } from '../device/packets';
@@ -10,7 +10,7 @@ export function LogitechPanel() {
   const s = useLogi();
   const dry = useApp((x) => x.settings.dryRun);
   const [plan, setPlan] = useState<PlannedLogiWrite[] | null>(null);
-  const pending = s.draft ? planLogitech() : [];
+  const pending = s.status === 'connected' ? planLogitech() : [];
   if (!s.model) return null;
   const caps = s.caps;
   const bat = s.info.battery;
@@ -23,7 +23,7 @@ export function LogitechPanel() {
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-panel2 text-xl font-black text-accent">G</div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 text-lg font-semibold">
-                Logitech {s.info.name ?? s.model.name}
+                Logitech {s.info.name ?? 'mouse'}
                 <Badge tone="info">{s.model.wireless ? t('lightspeed') : t('wired')}</Badge>
                 {s.kind === 'mock' && <Badge tone="info">demo</Badge>}
               </div>
@@ -51,6 +51,44 @@ export function LogitechPanel() {
           {s.error && <p className="mt-3 rounded-lg bg-amber-500/10 p-2.5 text-sm text-amber-300">{s.error}</p>}
         </Card>
 
+        {!!s.info.rates?.length && (
+          <Card title={t('pollingTitle')} right={s.info.reportRate ? <Badge tone="info">{t('pollingNow', { hz: s.info.reportRate })}</Badge> : undefined}>
+            <div className="grid grid-cols-4 gap-1.5">
+              {s.info.rates.map((hz) => (
+                <button
+                  key={hz}
+                  type="button"
+                  onClick={() => useLogi.setState({ draftRate: hz })}
+                  className={cx(
+                    'rounded-lg border py-2 text-xs transition',
+                    s.draftRate === hz ? 'border-accent bg-accent/10 font-semibold text-ink' : 'border-line text-mute hover:border-accent/50 hover:text-ink',
+                  )}
+                >
+                  <span dir="ltr">{hz >= 1000 ? `${hz / 1000}k` : hz} Hz</span>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 rounded-lg bg-panel2 p-2.5 text-[11px] leading-relaxed text-mute">
+              {s.info.mode === 'host' ? (
+                <>
+                  <div className="mb-1 font-semibold text-ink">{t('modeHost')}</div>
+                  {t('pollingHostNote')}
+                  <Button variant="solid" className="mt-2 w-full" onClick={() => setPlan(planLogiMode('onboard'))}>
+                    {t('toOnboard', { n: s.savedProfile })}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="mb-1 font-semibold text-ink">{t('modeOnboard', { n: s.info.activeProfile ?? '?' })}</div>
+                  {t('pollingOnboardNote')}
+                  <Button variant="solid" className="mt-2 w-full" onClick={() => setPlan(planLogiMode('host'))}>
+                    {t('toHost')}
+                  </Button>
+                </>
+              )}
+            </div>
+          </Card>
+        )}
         {caps && s.draft && (
           <Card
             title={t('hitsTitle')}

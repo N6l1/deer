@@ -9,6 +9,7 @@ export const SWID = 0x0a; // our software ID (low nibble); device notifications 
 export const HIDPP_USAGE_PAGE = 0xff00;
 
 export interface LogiModel {
+  /** what the USB product is; the mouse's own name is read from it after connecting */
   name: string;
   productId: number;
   /** device index: 0x01 behind the LIGHTSPEED receiver, 0xFF when wired */
@@ -16,11 +17,20 @@ export interface LogiModel {
   wireless: boolean;
 }
 
-export const PRO_X2_SUPERSTRIKE: LogiModel[] = [
-  { name: 'PRO X2 SUPERSTRIKE', productId: 0xc54d, deviceIndex: 0x01, wireless: true }, // LIGHTSPEED receiver
-  { name: 'PRO X2 SUPERSTRIKE', productId: 0xc0a8, deviceIndex: 0xff, wireless: false }, // USB cable (Solaar usbid C0A8)
+/** USB products DeerTune opens. The PRO X2 SUPERSTRIKE and PRO X SUPERLIGHT 2 share the C54D receiver. */
+export const LOGI_MODELS: LogiModel[] = [
+  { name: 'LIGHTSPEED receiver', productId: 0xc54d, deviceIndex: 0x01, wireless: true },
+  { name: 'PRO X2 SUPERSTRIKE', productId: 0xc0a8, deviceIndex: 0xff, wireless: false }, // Solaar usbid C0A8
+  { name: 'PRO X SUPERLIGHT 2', productId: 0xc09b, deviceIndex: 0xff, wireless: false }, // Solaar usbid C09B (WPID 40A9)
 ];
-export const findLogiModel = (pid: number) => PRO_X2_SUPERSTRIKE.find((m) => m.productId === pid);
+/** @deprecated kept for older imports */
+export const PRO_X2_SUPERSTRIKE = LOGI_MODELS;
+
+/** Friendly names for what the mouse reports over DEVICE NAME (Solaar device dumps). */
+export const prettyLogiName = (name: string | undefined) =>
+  !name ? undefined : /^PRO X 2$/i.test(name.trim()) ? 'PRO X SUPERLIGHT 2' : /superstrike/i.test(name) ? 'PRO X2 SUPERSTRIKE' : name.trim();
+
+export const findLogiModel = (pid: number) => LOGI_MODELS.find((m) => m.productId === pid);
 
 export const FEATURE = {
   ROOT: 0x0000,
@@ -116,8 +126,16 @@ export function decodeBattery(p: Uint8Array): { percent: number | null; charging
 /** 0x2202 fn5 reply `[sensor, xHi, xLo, …, yHi, yLo, …, lod]` (Solaar `dpi_extended`) */
 export const decodeDpi = (p: Uint8Array) => ({ x: ((p[1] ?? 0) << 8) | (p[2] ?? 0), y: ((p[5] ?? 0) << 8) | (p[6] ?? 0) });
 
-/** 0x8061 fn2 reply `[index]`; index 0..6 = 125, 250, 500, 1000, 2000, 4000, 8000 Hz */
+/** 0x8061 fn2 reply `[index]`; index 0..6 = 125, 250, 500, 1000, 2000, 4000, 8000 Hz (Solaar ExtendedReportRate) */
 export const decodeReportRate = (p: Uint8Array) => ((p[0] ?? 255) <= 6 ? 125 * 2 ** (p[0] ?? 0) : null);
+export const rateToIndex = (hz: number) => Math.round(Math.log2(hz / 125));
+/** 0x8061 fn1 reply: 2-byte big-endian flags, bit i = index i supported */
+export function decodeSupportedRates(p: Uint8Array): number[] {
+  const flags = ((p[0] ?? 0) << 8) | (p[1] ?? 0);
+  return Array.from({ length: 7 }, (_, i) => i).filter((i) => flags & (1 << i)).map((i) => 125 * 2 ** i);
+}
+/** 0x8100 fn4 reply `[profileHi, profileLo]`: the active onboard profile */
+export const decodeActiveProfile = (p: Uint8Array) => ((p[0] ?? 0) << 8) | (p[1] ?? 0);
 
 /** 0x8100 fn2 reply `[mode]`: 1 = onboard profile, 2 = host (software) mode */
 export const decodeOnboardMode = (p: Uint8Array) => (p[0] === 1 ? 'onboard' : p[0] === 2 ? 'host' : 'unknown');

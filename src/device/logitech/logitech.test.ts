@@ -53,7 +53,8 @@ describe('guard', () => {
   });
   it('blocks unknown features, profile-mode writes, reset and bad tuning bytes', () => {
     expect(checkHidpp(buildGetFeature(1, 0x1802), 1, idx, caps).ok).toBe(false); // DEVICE RESET
-    expect(checkHidpp(buildRequest(1, 14, 1, [2]), 1, idx, caps).ok).toBe(false); // switch to host mode
+    expect(checkHidpp(buildRequest(1, 14, 1, [3]), 1, idx, caps).ok).toBe(false); // unknown onboard mode
+    expect(checkHidpp(buildRequest(1, 14, 5, [0]), 1, idx, caps).ok).toBe(false); // profile memory read/write functions
     expect(checkHidpp(buildRequest(1, 18, 0), 1, idx, caps).ok).toBe(false);
     expect(checkHidpp(buildRequest(1, 12, 1, [0, 0x2c, 0x0d, 0x0c]), 1, idx, caps).ok).toBe(false); // actuation 11
     expect(checkHidpp(buildRequest(1, 12, 1, [0, 0x14, 0x00, 0x0c]), 1, idx, caps).ok).toBe(false); // rapid trigger 0
@@ -97,6 +98,43 @@ describe('HidppChannel with mock', () => {
     await expect(ch.request(buildRequest(1, 3, 1, [0]))).resolves.toBeTruthy();
     // battery capabilities (fn0) is allowed but the mock answers "invalid function"
     await expect(ch.request(buildRequest(1, 6, 0))).rejects.toThrow(/invalid function/);
-    await expect(ch.request(buildRequest(1, 14, 1, [2]))).rejects.toBeInstanceOf(HidppError);
+    await expect(ch.request(buildRequest(1, 14, 6, [0]))).rejects.toBeInstanceOf(HidppError); // profile memory write: blocked
+  });
+});
+
+
+import { decodeActiveProfile, decodeSupportedRates, prettyLogiName, rateToIndex } from './hidpp';
+
+describe('report rate and onboard mode', () => {
+  const idx = { ROOT: 0, EXTENDED_REPORT_RATE: 11, ONBOARD_PROFILES: 12 };
+  it('decodes the supported-rate flags and maps Hz to the Solaar index', () => {
+    expect(decodeSupportedRates(new Uint8Array([0x00, 0x7f]))).toEqual([125, 250, 500, 1000, 2000, 4000, 8000]);
+    expect(decodeSupportedRates(new Uint8Array([0x00, 0x1f]))).toEqual([125, 250, 500, 1000, 2000]);
+    expect([125, 1000, 8000].map(rateToIndex)).toEqual([0, 3, 6]);
+    expect(decodeActiveProfile(new Uint8Array([0, 1]))).toBe(1);
+  });
+  it('guard: rate write 0..6, onboard mode 1|2, profile 1..5; everything else blocked', () => {
+    expect(checkHidpp(buildRequest(1, 11, 3, [6]), 1, idx, null)).toMatchObject({ ok: true, cls: 'write' });
+    expect(checkHidpp(buildRequest(1, 11, 3, [7]), 1, idx, null).ok).toBe(false);
+    expect(checkHidpp(buildRequest(1, 12, 1, [2]), 1, idx, null)).toMatchObject({ ok: true, cls: 'write' });
+    expect(checkHidpp(buildRequest(1, 12, 3, [0, 1]), 1, idx, null)).toMatchObject({ ok: true, cls: 'write' });
+    expect(checkHidpp(buildRequest(1, 12, 3, [0, 9]), 1, idx, null).ok).toBe(false);
+    expect(checkHidpp(buildRequest(1, 12, 4), 1, idx, null)).toMatchObject({ ok: true, cls: 'query' });
+  });
+  it('names: "PRO X 2" is the SUPERLIGHT 2', () => {
+    expect(prettyLogiName('PRO X 2')).toBe('PRO X SUPERLIGHT 2');
+    expect(prettyLogiName('PRO X 2 Superstrike')).toBe('PRO X2 SUPERSTRIKE');
+  });
+  it('mock SUPERLIGHT 2: rate is ignored in onboard mode and applies in host mode', async () => {
+    const mock = new MockSuperstrike(0xc54d, false);
+    const ch = new HidppChannel(mock, { isDryRun: () => false, log: () => undefined });
+    await ch.discover();
+    expect(ch.features.SUPERSTRIKE_TUNING).toBeUndefined();
+    const rr = ch.features.EXTENDED_REPORT_RATE!;
+    await ch.request(buildRequest(1, rr, 3, [6]));
+    expect(decodeReportRate((await ch.request(buildRequest(1, rr, 2)))!)).toBe(1000);
+    await ch.request(buildRequest(1, ch.features.ONBOARD_PROFILES!, 1, [2]));
+    await ch.request(buildRequest(1, rr, 3, [6]));
+    expect(decodeReportRate((await ch.request(buildRequest(1, rr, 2)))!)).toBe(8000);
   });
 });

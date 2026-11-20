@@ -63,7 +63,7 @@ Writes are allowed only when the keyboard reports firmware protocol 9. The MAD68
 
 ## Mouse
 
-Supported: **Razer Viper V4 Pro** and **Logitech PRO X2 SUPERSTRIKE**. One **Connect mouse** button handles both.
+Supported: **Razer Viper V4 Pro**, **Logitech PRO X2 SUPERSTRIKE** and **Logitech PRO X SUPERLIGHT 2**. One **Connect mouse** button handles all of them.
 
 ### Razer Viper V4 Pro
 
@@ -74,7 +74,7 @@ Supported: **Razer Viper V4 Pro** and **Logitech PRO X2 SUPERSTRIKE**. One **Con
 
 If a wireless mouse is asleep it won't answer. Move it and press **Refresh**. Button remapping isn't available yet.
 
-### Logitech PRO X2 SUPERSTRIKE
+### Logitech PRO X2 SUPERSTRIKE and PRO X SUPERLIGHT 2
 
 1. **Quit Logitech G HUB** completely (including from the system tray). While it runs, it holds the mouse and every request fails with "busy".
 2. Click **Connect mouse** and pick the LIGHTSPEED receiver (or the mouse itself if it's plugged in with the cable).
@@ -84,7 +84,9 @@ If a wireless mouse is asleep it won't answer. Move it and press **Refresh**. Bu
    - **Click haptics** 0–5, where 0 turns the haptic click off.
 4. Click **Apply to mouse**. DeerTune reads the values back afterwards.
 
-DPI, report rate and the onboard-profile state are shown but can't be changed yet. The mouse runs from its onboard profile, and changing those values would mean switching it to software mode.
+**Polling rate** (both mice): pick a rate from the ones the mouse supports (up to 8 kHz) and click **Apply to mouse**. Logitech mice normally run from an **onboard profile**, which controls the polling rate. If the mouse keeps its old rate, DeerTune tells you; click **Switch to software mode**, then apply again. **Back to onboard profile N** returns everything to your G HUB profile. In software mode, G HUB's DPI stages and button remaps are paused, and the mouse may return to its onboard profile after it reconnects.
+
+The SUPERSTRIKE click-tuning section only appears on the SUPERSTRIKE. DPI is shown but can't be changed yet.
 
 ## Profiles
 

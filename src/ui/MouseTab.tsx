@@ -30,7 +30,8 @@ export function MouseTab() {
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           <Button variant="solid" onClick={() => void connectMockMouse()}>{t('mouseDemo')}: Razer Viper V4 Pro</Button>
-          <Button variant="solid" onClick={() => void connectMockLogitech()}>{t('mouseDemo')}: Logitech PRO X2 SUPERSTRIKE</Button>
+          <Button variant="solid" onClick={() => void connectMockLogitech(true)}>{t('mouseDemo')}: Logitech PRO X2 SUPERSTRIKE</Button>
+          <Button variant="solid" onClick={() => void connectMockLogitech(false)}>{t('mouseDemo')}: Logitech PRO X SUPERLIGHT 2</Button>
         </div>
         <p className="text-xs text-mute">{t('mousePickHint')}</p>
         {m.error && <p className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-300">{m.error}</p>}
