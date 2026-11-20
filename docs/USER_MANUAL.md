@@ -55,7 +55,9 @@ Choose a layer (Base, Fn, Fn2), click a key, then pick what it should send: lett
 2. DeerTune reads every key's actuation point and rapid-trigger setting, plus the lighting, straight from the keyboard.
 3. Select keys (click, Ctrl/Shift-click, drag, or **WASD** / **All keys**), then set the action point (0.05–3.40 mm) and rapid trigger with its press and release sensitivity.
 4. Turn on **Live travel** to watch each key's depth as you press it. This only reads from the keyboard and never writes.
-5. Click **Save to Keyboard**, check the preview, and press **Send**. The changed tables are written in full and saved to the keyboard's flash, then read back to confirm.
+5. **Keyboard layout:** pick **Windows** or **Mac**. Mac mode swaps the modifiers for macOS, so Win becomes ⌘ Command and Alt becomes ⌥ Option. The other keyboard switches (Win lock, NKRO and so on) are left as they are.
+6. **SOCD:** select two keys (for example click A, then Ctrl-click D), choose how conflicts resolve (last input wins, first key wins, second key wins, or neutral), and click **Add pair from selection**. You can change a pair's mode or remove it with ×. Up to 16 slots are available; slots the official hub uses for rapid snappy or OKS are left alone.
+7. Click **Save to Keyboard**, check the preview, and press **Send**. The changed tables are written in full and saved to the keyboard's flash, then read back to confirm.
 
 Writes are allowed only when the keyboard reports firmware protocol 9. The MAD68 HE RGB is verified. On other variants (Lightless, Ultra, Limited) DeerTune reads everything but needs *Allow experimental writes* turned on before it writes. Key remapping, macros and per-key RGB still need the official hub.
 

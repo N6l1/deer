@@ -18,7 +18,7 @@
 | Custom per-key RGB | Brush with colour wheel and hex input, fill all, eyedropper | ✅ |
 | Last Win (SOCD), Release Dual-Trigger | Pair editors, thresholds | 🧪 experimental |
 | Remap | Base / Fn / Fn2 layers; letters, modifiers, F-keys, media, mouse, keyboard functions, disable; knob | 🧪 experimental |
-| MAD 68 HE tab | MADLIONS MAD68 HE: per-key actuation (0.05–3.40 mm) and rapid trigger, live key travel, lighting effect / brightness / speed / colour, saved to flash with read-back | ✅ on 1058 RGB; other variants experimental |
+| MAD 68 HE tab | MADLIONS MAD68 HE: per-key actuation (0.05–3.40 mm) and rapid trigger, live key travel, Windows / Mac layout switch, SOCD pairs (last input / key 1 / key 2 / neutral), lighting effect / brightness / speed / colour, saved to flash with read-back | ✅ on 1058 RGB; other variants experimental |
 | Mouse tab | Razer Viper V4 Pro, wired or via dongle: battery, DPI stages (up to 5, X/Y), polling rate up to 8 kHz, sleep timer, low-battery warning; read back after every write | ✅ (button remap not yet) |
 | Logitech PRO X2 SUPERSTRIKE | SUPERSTRIKE click tuning per button (actuation 1–10, rapid trigger 1–5, haptics 0–5), battery; DPI / report rate / onboard mode shown read-only | ✅ (DPI editing not yet) |
 | Profiles | Add, rename, duplicate, delete, import/export JSON (also imports official driver profiles), IndexedDB storage | ✅ |

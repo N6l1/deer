@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import {
   buildActuationWrites, buildBulkRead, buildLightWrites, buildRtWrites, buildProtocolQuery, buildReadLight, bulkData, decodeLight, decodeProtocol,
   decodeRts, decodeU16s, MAX_ACT_READ, MAX_RT_READ, MAX_TRAVEL_READ, rawToMm, SUB, TOTAL, type Light, type MadBoard, type RapidTrigger,
+  buildReadFeatures, buildWriteFeatures, decodeFeatures, buildReadAdvanced, buildWriteAdvanced, decodeAdvanced, ADVANCED_SLOTS, type Features, type AdvancedKey,
 } from '../device/madlions/protocol';
 import { MadChannel, MockMad68, WebHidMadTransport, type MadTransport } from '../device/madlions/transport';
 import { useApp, pushDepth } from './store';
@@ -14,6 +15,8 @@ export interface MadSettings {
   act: number[];
   rt: RapidTrigger[];
   light: Light | null;
+  features: Features | null;
+  advanced: AdvancedKey[] | null;
 }
 
 interface MadState {
@@ -145,7 +148,21 @@ export async function refreshMad() {
     } catch (e) {
       app().addLog({ dir: 'info', hex: '', label: String((e as Error).message) });
     }
-    const device: MadSettings = { act, rt, light };
+    const optional = async <T,>(fn: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await fn();
+      } catch (e) {
+        app().addLog({ dir: 'info', hex: '', label: String((e as Error).message) });
+        return null;
+      }
+    };
+    const features = await optional(async () => decodeFeatures((await channel!.request(buildReadFeatures()))!));
+    const advanced = await optional(async () => {
+      const list: AdvancedKey[] = [];
+      for (let i = 0; i < ADVANCED_SLOTS; i++) list.push(decodeAdvanced((await channel!.request(buildReadAdvanced(i), { quiet: true }))!));
+      return list;
+    });
+    const device: MadSettings = { act, rt, light, features, advanced };
     useMad.setState({ device, draft: clone(device), writeBlock: channel.writeBlock(), error: undefined });
   } catch (e) {
     useMad.setState({ error: String((e as Error).message ?? e) });
@@ -186,6 +203,10 @@ export function planMad(): PlannedMadWrite[] {
   // a flash erase must never leave keys you didn't touch with stale values.
   if (JSON.stringify(draft.act) !== JSON.stringify(device.act)) buildActuationWrites(draft.act).forEach((p, i, a) => out.push({ payload: p, label: `Actuation table ${i + 1}/${a.length} (save to flash)` }));
   if (JSON.stringify(draft.rt) !== JSON.stringify(device.rt)) buildRtWrites(draft.rt).forEach((p, i, a) => out.push({ payload: p, label: `Rapid trigger table ${i + 1}/${a.length} (save to flash)` }));
+  if (draft.features && JSON.stringify(draft.features) !== JSON.stringify(device.features)) out.push({ payload: buildWriteFeatures(draft.features), label: `Keyboard layout: ${draft.features.mac ? 'Mac' : 'Windows'}` });
+  draft.advanced?.forEach((k, i) => {
+    if (JSON.stringify(k) !== JSON.stringify(device.advanced?.[i])) out.push({ payload: buildWriteAdvanced(k), label: k.mode ? `SOCD pair in slot ${k.index}` : `Clear SOCD slot ${k.index}` });
+  });
   if (draft.light && JSON.stringify(draft.light) !== JSON.stringify(device.light)) buildLightWrites(draft.light).forEach((p, i, a) => out.push({ payload: p, label: i === a.length - 1 ? 'Save lighting' : 'Lighting effect' }));
   return out;
 }
@@ -200,6 +221,8 @@ export function pendingMad(): number {
     if (JSON.stringify(draft.rt[i]) !== JSON.stringify(device.rt[i])) n++;
   }
   if (JSON.stringify(draft.light) !== JSON.stringify(device.light)) n++;
+  if (JSON.stringify(draft.features) !== JSON.stringify(device.features)) n++;
+  draft.advanced?.forEach((k, i) => JSON.stringify(k) !== JSON.stringify(device.advanced?.[i]) && n++);
   return n;
 }
 
@@ -215,7 +238,9 @@ export async function applyMad(plan: PlannedMadWrite[]) {
       const wanted = useMad.getState().draft;
       await refreshMad();
       const got = useMad.getState().device;
-      const same = !!wanted && !!got && JSON.stringify(wanted.act) === JSON.stringify(got.act) && JSON.stringify(wanted.rt) === JSON.stringify(got.rt);
+      const same =
+        !!wanted && !!got &&
+        (['act', 'rt', 'features', 'advanced'] as const).every((k) => JSON.stringify(wanted[k]) === JSON.stringify(got[k]));
       app().toast(same ? `Wrote and saved ${plan.length} report(s); read-back matches.` : 'Wrote to the keyboard, but read-back differs. Check the HID log.', same ? 'ok' : 'warn');
     }
   } catch (e) {

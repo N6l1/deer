@@ -4,7 +4,8 @@ import { useApp, liveDepth, subscribeDepth } from '../state/store';
 import { useT } from '../i18n';
 import { isWebHidSupported } from '../device/webhid';
 import { toHexTrimmed } from '../device/packets';
-import { MAD68_LAYOUT, MAD68_PRESETS, MAD_EFFECTS, TRAVEL_MAX, TRAVEL_MIN, BRIGHTNESS_MAX } from '../device/madlions/protocol';
+import { MAD68_LAYOUT, MAD68_PRESETS, MAD_EFFECTS, TRAVEL_MAX, TRAVEL_MIN, BRIGHTNESS_MAX, SOCD_MODES, isSocd, socdSlot, freeSlots, emptyAdvanced } from '../device/madlions/protocol';
+import type { StringKey } from '../i18n';
 import { Badge, Button, Card, Modal, Row, Slider, Toggle, cx } from './common';
 import { KeyboardMap } from './KeyboardMap';
 
@@ -137,6 +138,26 @@ export function MadlionsTab() {
           </Card>
         )}
 
+        {d?.features && (
+          <Card title={t('osLayout')}>
+            <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-line p-1">
+              {([0, 1] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => m.setDraft((x) => void (x.features = { ...x.features!, mac: v }))}
+                  className={cx('rounded-lg py-2 text-sm font-medium transition', d.features!.mac === v ? 'grad text-white' : 'text-mute hover:text-ink')}
+                >
+                  {v ? `⌘ ${t('osMac')}` : `⊞ ${t('osWindows')}`}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-mute">{t('osHint')}</p>
+          </Card>
+        )}
+
+        {d?.advanced && <SocdCard />}
+
         {light && (
           <Card title={t('effect')}>
             <select
@@ -202,5 +223,56 @@ export function MadlionsTab() {
         </ol>
       </Modal>
     </div>
+  );
+}
+
+const SOCD_LABEL: Record<number, StringKey> = { 2: 'socdLast', 3: 'socdKey1', 4: 'socdKey2', 5: 'socdNeutral' };
+
+function SocdCard() {
+  const t = useT();
+  const m = useMad();
+  const [mode, setMode] = useState<number>(2);
+  const adv = m.draft?.advanced ?? [];
+  const label = (slot: number) => MAD68_LAYOUT.keys.find((k) => k.slot === slot)?.label ?? `#${slot}`;
+  const pairs = adv.filter((k) => isSocd(k.mode));
+  const others = adv.filter((k) => k.mode !== 0 && !isSocd(k.mode)).length;
+  const free = freeSlots(adv);
+  const two = m.selection.length === 2 ? m.selection : null;
+  return (
+    <Card title={<span className="flex items-center gap-2">{t('socd')}</span>}>
+      <p className="mb-3 text-[11px] leading-relaxed text-mute">{t('socdHint')}</p>
+      <div className="mb-3 flex flex-col gap-1.5">
+        {pairs.length === 0 && <p className="text-xs text-mute">{t('socdNone')}</p>}
+        {pairs.map((k) => (
+          <div key={k.index} className="flex items-center gap-2 rounded-lg border border-line bg-panel2 px-2.5 py-1.5 text-sm">
+            <span className="font-semibold">{label(k.key1)} ⇄ {label(k.key2)}</span>
+            <select
+              aria-label={t('socd')}
+              value={k.mode}
+              onChange={(e) => m.setDraft((x) => void (x.advanced![k.index] = { ...x.advanced![k.index]!, mode: Number(e.target.value) }))}
+              className="ms-auto rounded border border-line bg-panel px-1.5 py-0.5 text-xs"
+            >
+              {SOCD_MODES.map((v) => <option key={v} value={v}>{t(SOCD_LABEL[v]!)}</option>)}
+            </select>
+            <button type="button" aria-label="remove" onClick={() => m.setDraft((x) => void (x.advanced![k.index] = emptyAdvanced(k.index)))} className="grid h-5 w-5 place-items-center rounded-full text-mute hover:bg-line hover:text-ink">×</button>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <select aria-label={t('socd')} value={mode} onChange={(e) => setMode(Number(e.target.value))} className="rounded-lg border border-line bg-panel2 px-2 py-1.5 text-xs">
+          {SOCD_MODES.map((v) => <option key={v} value={v}>{t(SOCD_LABEL[v]!)}</option>)}
+        </select>
+        <Button
+          variant="solid"
+          disabled={!two || !free.length}
+          title={!free.length ? t('socdNoSlot') : t('socdPick')}
+          onClick={() => two && free[0] !== undefined && m.setDraft((x) => void (x.advanced![free[0]!] = socdSlot(x.advanced![free[0]!]!, two[0]!, two[1]!, mode)))}
+        >
+          + {t('socdAdd')}
+        </Button>
+      </div>
+      <p className="mt-2 text-[11px] text-mute">{!free.length ? t('socdNoSlot') : t('socdPick')}</p>
+      {others > 0 && <p className="mt-1 text-[11px] text-mute">{t('socdOther', { n: others })}</p>}
+    </Card>
   );
 }

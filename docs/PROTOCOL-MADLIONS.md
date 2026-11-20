@@ -29,6 +29,10 @@ Writes are refused unless the keyboard reports **protocol 9**, and on unverified
 | `03 96 0E 00 00 offHi offLo n FLASH data…` | **write rapid trigger**, n ≤ 4 |
 | `07 41 effect 00 speed R G B brightness` | **set lighting**, speed 1–255, brightness 0–210 (the firmware ignores higher values) |
 | `03 96 12` | **save lighting** to flash |
+| `02 96 11` | read keyboard switches. Reply [3..7]: `rgbArea, wasdSwap, mac, winLock, nkro` |
+| `03 96 11 rgbArea wasd mac winLock nkro` | **set switches**. DeerTune changes only `mac` (0 = Windows, 1 = macOS) and writes the other four back exactly as read. The guard allows only 0/1 for the flags. |
+| `02 96 20 00 00 01 idx idx` | read advanced key slot `idx` (0–15). Reply: index [6], mode [7], key id [8], RS level u16 [9:11], gapc [11], rt [12], key 1 row/col [13,14], key 2 row/col [15,16], layer [17] |
+| `03 96 20 00 00 03 idx mode keyId apcHi apcLo gapc rt k1r k1c k2r k2c layer` | **write SOCD slot**. Modes: 2 last input wins, 3 key 1 wins, 4 key 2 wins, 5 neutral. Mode 0 with all-zero fields clears the slot. |
 
 `FLASH` is `00` (apply live) or `03` (erase and write flash). DeerTune saves the way madlions-control's `commit()` does: it rewrites the **whole** 75-entry table with `03`, so a flash erase can't leave other keys with stale values. When the effect is Off, the firmware ignores colour and brightness, so DeerTune first sets them with Solid colour and then switches to Off (madlions-control does the same).
 
@@ -37,7 +41,11 @@ Colour read-back is gamma-corrected and may not exactly equal the colour written
 ## Not implemented (blocked by the guard)
 
 - Keymaps (`04`/`05`/`12`/`13`), macros (`0C`–`0F`), per-key colours (`96 42`/`45`).
-- Features, dead band, game mode, advanced keys / SOCD / DKS, tap-hold (`FE` prefix).
+- Dead band, game mode, DKS, tap-hold (`FE` prefix), and advanced-key modes other than SOCD (rapid snappy 1, OKS 6).
+
+## SOCD details
+
+DeerTune builds SOCD slots exactly as madlions-control's advanced-key dialog saves them: key id 0, RS level kept (0.50 mm if it was empty), the gapc, rt and layer bytes kept from the slot as read. Slots holding rapid snappy or OKS (set in the official hub) are never rewritten. New pairs use the highest free slot first, because hold/click (tap-dance) only exists in slots 0–7. Both keys must be physical keys and must be different.
 - Calibration (`96 1F`), EEPROM reset, bootloader, firmware.
 
 ## Effect numbers

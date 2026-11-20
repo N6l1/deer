@@ -106,3 +106,54 @@ describe('MadChannel with mock', () => {
     await expect(c.ch.request(buildActuationWrites([1])[0]!)).resolves.toBeTruthy();
   });
 });
+
+import {
+  buildReadAdvanced, buildReadFeatures, buildWriteAdvanced, buildWriteFeatures, decodeAdvanced, decodeFeatures, emptyAdvanced, freeSlots, socdSlot,
+} from './protocol';
+
+describe('Mac / Windows switch (03 96 11)', () => {
+  it('reads and writes the five switches, keeping the others', () => {
+    expect(Array.from(buildReadFeatures().subarray(0, 4))).toEqual([2, 0x96, 0x11, 0]);
+    const f = decodeFeatures(report(2, 0x96, 0x11, 3, 0, 0, 1, 1));
+    expect(f).toEqual({ rgbArea: 3, wasdSwap: 0, mac: 0, winLock: 1, nkro: 1 });
+    expect(Array.from(buildWriteFeatures({ ...f, mac: 1 }).subarray(0, 9))).toEqual([3, 0x96, 0x11, 3, 0, 1, 1, 1, 0]);
+    expect(checkMad(buildWriteFeatures({ ...f, mac: 1 }))).toMatchObject({ ok: true, cls: 'write' });
+    expect(checkMad(report(3, 0x96, 0x11, 0, 0, 2, 0, 1)).ok).toBe(false);
+  });
+});
+
+describe('SOCD (advanced keys, 03 96 20)', () => {
+  it('read request and reply layout match madlions-control', () => {
+    expect(Array.from(buildReadAdvanced(5).subarray(0, 9))).toEqual([2, 0x96, 0x20, 0, 0, 1, 5, 5, 0]);
+    const r = report(2, 0x96, 0x20, 0, 0, 1, 5, 2, 0, 0, 50, 0, 1, 2, 1, 2, 3, 0);
+    expect(decodeAdvanced(r)).toEqual({ index: 5, mode: 2, keyId: 0, rsApc: 50, gapc: 0, rt: 1, key1: 31, key2: 33, layer: 0 });
+  });
+  it('builds an A/D last-input-wins slot exactly like madlions-control', () => {
+    const k = socdSlot(emptyAdvanced(15), 31, 33, 2);
+    expect(Array.from(buildWriteAdvanced(k).subarray(0, 19))).toEqual([3, 0x96, 0x20, 0, 0, 3, 15, 2, 0, 0, 50, 0, 0, 2, 1, 2, 3, 0, 0]);
+    expect(checkMad(buildWriteAdvanced(k))).toMatchObject({ ok: true, cls: 'write' });
+    expect(checkMad(buildWriteAdvanced(emptyAdvanced(15)))).toMatchObject({ ok: true, cls: 'write' });
+  });
+  it('guard: only SOCD modes, physical keys, distinct keys; clears must be all zero', () => {
+    expect(checkMad(buildWriteAdvanced({ ...socdSlot(emptyAdvanced(0), 31, 33, 2), mode: 1 })).ok).toBe(false); // RS
+    expect(checkMad(buildWriteAdvanced({ ...socdSlot(emptyAdvanced(0), 31, 33, 2), mode: 6 })).ok).toBe(false); // OKS
+    expect(checkMad(buildWriteAdvanced(socdSlot(emptyAdvanced(0), 31, 31, 2))).ok).toBe(false);
+    expect(checkMad(buildWriteAdvanced(socdSlot(emptyAdvanced(0), 42, 33, 2))).ok).toBe(false); // (2,12) is an empty cell
+    expect(checkMad(buildWriteAdvanced({ ...emptyAdvanced(0), layer: 1 })).ok).toBe(false);
+    expect(checkMad(buildWriteAdvanced(socdSlot(emptyAdvanced(16), 31, 33, 2))).ok).toBe(false);
+  });
+  it('new pairs take free slots from 15 down, skipping slots in use', () => {
+    const slots = Array.from({ length: 16 }, (_, i) => emptyAdvanced(i));
+    slots[15] = socdSlot(slots[15]!, 31, 33, 2);
+    slots[14] = { ...slots[14]!, mode: 1 };
+    expect(freeSlots(slots).slice(0, 2)).toEqual([13, 12]);
+  });
+  it('mock round-trip: write a pair, read it back; RS slot is left untouched', async () => {
+    const mock = new MockMad68();
+    const ch = new MadChannel(mock, { isDryRun: () => false, allowExperimental: () => false, log: () => undefined });
+    ch.protocol = 9;
+    await ch.request(buildWriteAdvanced(socdSlot(emptyAdvanced(15), 31, 33, 2)));
+    expect(decodeAdvanced((await ch.request(buildReadAdvanced(15)))!)).toMatchObject({ mode: 2, key1: 31, key2: 33 });
+    expect(decodeAdvanced((await ch.request(buildReadAdvanced(3)))!).mode).toBe(1);
+  });
+});

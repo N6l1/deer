@@ -13,7 +13,7 @@ export const KNOWN_PROTOCOL = 9;
 
 export const CMD = { PROTOCOL: 0x01, GET_VALUE: 0x02, SET_VALUE: 0x03, CUSTOM_SET: 0x07, CUSTOM_GET: 0x08 } as const;
 export const CHANNEL = 0x96;
-export const SUB = { ACTUATION: 0x0d, RT: 0x0e, SAVE_LIGHT: 0x12, TRAVEL: 0x17, LIGHT: 0x41 } as const;
+export const SUB = { ACTUATION: 0x0d, RT: 0x0e, FEATURES: 0x11, SAVE_LIGHT: 0x12, TRAVEL: 0x17, ADVANCED: 0x20, LIGHT: 0x41 } as const;
 export const FLASH = { LIVE: 0x00, PERSIST: 0x03 } as const;
 
 export const ROWS = 5;
@@ -175,3 +175,69 @@ export const MAD_EFFECTS: { n: number; name: string; colour: boolean }[] = [
   { n: 28, name: 'Spectrum floating', colour: true }, { n: 30, name: 'Digital rain', colour: false }, { n: 31, name: 'Lighting up', colour: true },
   { n: 36, name: 'Crucifix', colour: true }, { n: 39, name: 'Fingertip rainbow', colour: false },
 ];
+
+// ---- global switches (Mac / Windows mode) ------------------------------------------------------------
+
+export interface Features {
+  rgbArea: number;
+  wasdSwap: number;
+  /** 0 = Windows layout, 1 = macOS layout */
+  mac: number;
+  winLock: number;
+  nkro: number;
+}
+
+export const buildReadFeatures = () => report(CMD.GET_VALUE, CHANNEL, SUB.FEATURES);
+/** `03 96 11 rgbArea wasd mac winLock nkro`: always write back the values read, changing only what the user changed. */
+export const buildWriteFeatures = (f: Features) => report(CMD.SET_VALUE, CHANNEL, SUB.FEATURES, f.rgbArea, f.wasdSwap, f.mac, f.winLock, f.nkro);
+export const decodeFeatures = (d: Uint8Array): Features => ({ rgbArea: d[3] ?? 0, wasdSwap: d[4] ?? 0, mac: d[5] ?? 0, winLock: d[6] ?? 0, nkro: d[7] ?? 1 });
+
+// ---- advanced keys (SOCD) -----------------------------------------------------------------------------
+
+export const ADVANCED_SLOTS = 16;
+export const ADV_MODE = { NONE: 0, RS: 1, SOCD_LAST: 2, SOCD_KEY1: 3, SOCD_KEY2: 4, SOCD_NEUTRAL: 5, OKS: 6 } as const;
+export const SOCD_MODES = [ADV_MODE.SOCD_LAST, ADV_MODE.SOCD_KEY1, ADV_MODE.SOCD_KEY2, ADV_MODE.SOCD_NEUTRAL] as const;
+export const isSocd = (mode: number) => mode >= 2 && mode <= 5;
+
+export interface AdvancedKey {
+  index: number;
+  mode: number;
+  keyId: number;
+  rsApc: number;
+  gapc: number;
+  rt: number;
+  key1: number; // slot = row * 15 + col
+  key2: number;
+  layer: number;
+}
+
+export const emptyAdvanced = (index: number): AdvancedKey => ({ index, mode: 0, keyId: 0, rsApc: 0, gapc: 0, rt: 0, key1: 0, key2: 0, layer: 0 });
+
+/** `02 96 20 00 00 01 idx idx` (madlions-control read_advanced_key) */
+export const buildReadAdvanced = (i: number) => report(CMD.GET_VALUE, CHANNEL, SUB.ADVANCED, 0, 0, 0x01, i, i);
+
+/** Reply: index [6], mode [7], key id [8], rs_apc u16 [9:11], gapc [11], rt [12], key1 row/col [13,14], key2 row/col [15,16], layer [17] */
+export function decodeAdvanced(d: Uint8Array): AdvancedKey {
+  return {
+    index: d[6] ?? 0, mode: d[7] ?? 0, keyId: d[8] ?? 0, rsApc: ((d[9] ?? 0) << 8) | (d[10] ?? 0), gapc: d[11] ?? 0, rt: d[12] ?? 0,
+    key1: (d[13] ?? 0) * COLS + (d[14] ?? 0), key2: (d[15] ?? 0) * COLS + (d[16] ?? 0), layer: d[17] ?? 0,
+  };
+}
+
+/** `03 96 20 00 00 03 idx mode keyId apcHi apcLo gapc rt k1r k1c k2r k2c layer` (madlions-control write_advanced_key) */
+export function buildWriteAdvanced(k: AdvancedKey): Uint8Array {
+  const keyId = k.keyId >= 0x1a ? k.keyId - 0x1a : k.keyId;
+  const apc = Math.min(0xffff, k.rsApc);
+  return report(
+    CMD.SET_VALUE, CHANNEL, SUB.ADVANCED, 0, 0, 0x03, k.index, k.mode, keyId, apc >> 8, apc & 0xff, k.gapc, k.rt,
+    Math.floor(k.key1 / COLS), k.key1 % COLS, Math.floor(k.key2 / COLS), k.key2 % COLS, k.layer,
+  );
+}
+
+/** An SOCD slot exactly as madlions-control saves one: RS level defaults to 0.50 mm, switches and layer kept. */
+export function socdSlot(prev: AdvancedKey, key1: number, key2: number, mode: number): AdvancedKey {
+  return { ...prev, mode, keyId: 0, key1, key2, rsApc: prev.rsApc || 50 };
+}
+
+/** Free slots for new pairs, highest first: hold/click (tap-dance) can only live in slots 0–7. */
+export const freeSlots = (keys: AdvancedKey[]) => keys.filter((k) => k.mode === ADV_MODE.NONE).map((k) => k.index).sort((a, b) => b - a);

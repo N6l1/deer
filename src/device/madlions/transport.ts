@@ -2,7 +2,7 @@
 
 import {
   CHANNEL, CMD, findMadBoard, FLASH, KNOWN_PROTOCOL, MAD_EFFECTS, MAD_USAGE, MAD_USAGE_PAGE, MAD_VENDOR_ID, MAD68_BOARDS, MAX_ACT_READ,
-  MAX_ACT_WRITE, MAX_RT_READ, MAX_RT_WRITE, MAX_TRAVEL_READ, REPORT, stripId, SUB, TOTAL, BRIGHTNESS_MAX, type MadBoard,
+  MAX_ACT_WRITE, MAX_RT_READ, MAX_RT_WRITE, MAX_TRAVEL_READ, REPORT, stripId, SUB, TOTAL, BRIGHTNESS_MAX, ADVANCED_SLOTS, COLS, MAD68_LAYOUT, type MadBoard,
 } from './protocol';
 import { toHexTrimmed } from '../packets';
 import type { LogEntry } from '../transport';
@@ -71,6 +71,8 @@ export class MockMad68 implements MadTransport {
   act = Array<number>(TOTAL).fill(150);
   rt = Array.from({ length: TOTAL }, () => [0, 50, 50]);
   light = [2, 0, 128, 0xff, 0x6a, 0x1a, 150];
+  features = [0, 0, 0, 0, 1];
+  adv: number[][] = Array.from({ length: 16 }, (_, i) => (i === 3 ? [1, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0] : Array(11).fill(0)));
   persisted = 0;
   private subs = new Set<(d: Uint8Array) => void>();
   private t0 = Date.now();
@@ -99,6 +101,15 @@ export class MockMad68 implements MadTransport {
       return this.reply(h);
     }
     if (p[1] !== CHANNEL) return this.reply([0xff]);
+    if (p[2] === SUB.FEATURES) {
+      if (p[0] === CMD.SET_VALUE) this.features = h.slice(3, 8);
+      return this.reply([p[0]!, CHANNEL, SUB.FEATURES, ...this.features]);
+    }
+    if (p[2] === SUB.ADVANCED) {
+      const i = p[6]!;
+      if (p[0] === CMD.SET_VALUE) this.adv[i] = h.slice(7, 18);
+      return this.reply([p[0]!, CHANNEL, SUB.ADVANCED, 0, 0, p[5]!, i, ...this.adv[i]!]);
+    }
     const [sub, off, n] = [p[2]!, (p[5]! << 8) | p[6]!, p[7]!];
     const head = h.slice(0, 8);
     if (p[0] === CMD.GET_VALUE) {
@@ -139,6 +150,12 @@ export function checkMad(p: Uint8Array): MadGuard {
   }
   if (a !== CHANNEL || (cmd !== CMD.GET_VALUE && cmd !== CMD.SET_VALUE)) return { ok: false, reason: `command 0x${(cmd ?? 0).toString(16)} is not on the allow-list` };
   if (cmd === CMD.SET_VALUE && sub === SUB.SAVE_LIGHT) return zeroFrom(p, 3) ? { ok: true, cls: 'write', label: 'save lighting' } : { ok: false, reason: 'bad save-lighting packet' };
+  if (sub === SUB.FEATURES) {
+    if (cmd === CMD.GET_VALUE) return zeroFrom(p, 3) ? { ok: true, cls: 'query', label: 'read keyboard switches' } : { ok: false, reason: 'bad switches read' };
+    const flags = [p[4], p[5], p[6], p[7]].every((b) => b === 0 || b === 1);
+    return flags && zeroFrom(p, 8) ? { ok: true, cls: 'write', label: `keyboard switches (${p[5] ? 'Mac' : 'Windows'} layout)` } : { ok: false, reason: 'switch values must be 0 or 1' };
+  }
+  if (sub === SUB.ADVANCED) return checkAdvanced(p);
   if (p[3] !== 0 || p[4] !== 0) return { ok: false, reason: 'bad bulk header' };
   const off = u16(p, 5);
   const n = p[7] ?? 0;
@@ -164,6 +181,22 @@ export function checkMad(p: Uint8Array): MadGuard {
     return zeroFrom(p, 9 + n * 5) ? { ok: true, cls: 'write', label: `rapid trigger @${off} ×${n}${flash ? ' (save)' : ''}` } : { ok: false, reason: 'bad padding' };
   }
   return { ok: false, reason: `vendor write 0x${(sub ?? 0).toString(16)} is not on the allow-list` };
+}
+
+const PHYSICAL = new Set(MAD68_LAYOUT.keys.map((k) => k.slot));
+
+function checkAdvanced(p: Uint8Array): MadGuard {
+  const idx = p[6] ?? 99;
+  if (p[3] !== 0 || p[4] !== 0 || idx >= ADVANCED_SLOTS) return { ok: false, reason: 'bad advanced-key header' };
+  if (p[0] === CMD.GET_VALUE) return p[5] === 0x01 && p[7] === idx && zeroFrom(p, 8) ? { ok: true, cls: 'query', label: `read advanced key ${idx}` } : { ok: false, reason: 'bad advanced-key read' };
+  if (p[5] !== 0x03) return { ok: false, reason: 'bad advanced-key sub-field' };
+  const mode = p[7] ?? 99;
+  if (mode === 0) return zeroFrom(p, 8) ? { ok: true, cls: 'write', label: `clear advanced key ${idx}` } : { ok: false, reason: 'a cleared slot must be all zero' };
+  if (mode < 2 || mode > 5) return { ok: false, reason: 'only SOCD modes (2–5) can be written' };
+  const k1 = (p[13] ?? 99) * COLS + (p[14] ?? 99);
+  const k2 = (p[15] ?? 99) * COLS + (p[16] ?? 99);
+  const ok = p[8] === 0 && (p[11] ?? 9) <= 1 && (p[12] ?? 9) <= 1 && (p[14] ?? 99) < COLS && (p[16] ?? 99) < COLS && PHYSICAL.has(k1) && PHYSICAL.has(k2) && k1 !== k2 && (p[17] ?? 9) < 4 && zeroFrom(p, 18);
+  return ok ? { ok: true, cls: 'write', label: `SOCD pair in slot ${idx} (mode ${mode})` } : { ok: false, reason: 'SOCD slot values out of range' };
 }
 
 // ---- Channel ----------------------------------------------------------------------------------------
@@ -239,7 +272,7 @@ export class MadChannel {
       const reply = new Promise<Uint8Array | null>((resolve) => {
         const timer = setTimeout(() => ((this.waiter = null), resolve(null)), o.timeoutMs ?? 1000);
         this.waiter = {
-          match: (d) => Array.from(p.subarray(0, echo)).every((b, i) => d[i] === b) && (p[0] !== CMD.GET_VALUE || (d[5] === p[5] && d[6] === p[6])),
+          match: (d) => Array.from(p.subarray(0, echo)).every((b, i) => d[i] === b) && (p[0] !== CMD.GET_VALUE || ![SUB.ACTUATION, SUB.RT, SUB.TRAVEL].includes(p[2] as never) || (d[5] === p[5] && d[6] === p[6])),
           resolve: (d) => (clearTimeout(timer), resolve(d)),
         };
       });
