@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useApp } from '../state/store';
 
 const en = {
-  appTagline: 'Unofficial configurator for DrunkDeer keyboards, Razer and Logitech mice',
+  appTagline: 'Unofficial configurator for DrunkDeer and MADLIONS keyboards, Razer and Logitech mice',
   tabColour: 'Colour', tabPerformance: 'Performance', tabRemap: 'Remap',
   userManual: 'User Manual', firmware: 'Firmware Download', lightMode: 'Light mode', darkMode: 'Dark mode', language: 'Language',
   connect: 'Connect keyboard', connectDemo: 'Try demo keyboard', disconnect: 'Disconnect', connected: 'Connected', disconnected: 'No keyboard',
@@ -49,6 +49,12 @@ const en = {
   power: 'Power', sleepAfter: 'Sleep after', lowBatteryAt: 'Low-battery warning at', minutes: 'min',
   mouseChanges: '{n} change(s)', mouseNotYet: 'Not available yet: button remapping and dongle LEDs. Nobody has published their bytes for this mouse.',
   mousePlanTitle: 'About to write {n} report(s) to the mouse',
+  tabMad: 'MAD 68 HE', madNone: 'No MAD 68 HE connected', madConnect: 'Connect MAD 68 HE',
+  madIntro: 'MADLIONS MAD68 HE family (RGB, Lightless, Ultra, Limited). Close the official hub.fgg.com.cn tab first; only one app can talk to the keyboard at a time.',
+  madReadOnly: 'Read-only', madCapHint: 'actuation (mm) · RT = rapid trigger on',
+  madColourNote: 'The keyboard gamma-corrects colours, so the colour it reports back can differ slightly from the one you picked.',
+  madNotYet: 'Not available yet: key remapping, macros, per-key RGB, SOCD / DKS / dead band. Use the official hub for those.',
+  madFullTable: 'Each changed table is written in full and saved to the keyboard’s flash (the same way the hardware-tested madlions-control app saves).',
   lightspeed: 'Wireless (LIGHTSPEED)', onboardMode: 'onboard profile', hostMode: 'software mode', hitsTitle: 'SUPERSTRIKE click tuning',
   hitsIntro: 'Tune each main button separately: how deep the click registers, how quickly it re-arms after you start releasing, and how strong the haptic click feels.',
   copyLeftRight: 'Copy left → right', leftButton: 'Left button', rightButton: 'Right button', hitsActuation: 'Actuation point', shallow: 'shallow (fast)', deep: 'deep',
@@ -61,7 +67,7 @@ export type Strings = typeof en;
 export type StringKey = keyof Strings;
 
 const ar: Strings = {
-  appTagline: 'أداة إعداد غير رسمية للوحات مفاتيح DrunkDeer وفئران Razer و Logitech',
+  appTagline: 'أداة إعداد غير رسمية للوحات مفاتيح DrunkDeer و MADLIONS وفئران Razer و Logitech',
   tabColour: 'الألوان', tabPerformance: 'الأداء', tabRemap: 'إعادة التعيين',
   userManual: 'دليل المستخدم', firmware: 'تنزيل البرنامج الثابت', lightMode: 'الوضع الفاتح', darkMode: 'الوضع الداكن', language: 'اللغة',
   connect: 'توصيل لوحة المفاتيح', connectDemo: 'جرّب لوحة تجريبية', disconnect: 'قطع الاتصال', connected: 'متصل', disconnected: 'لا توجد لوحة مفاتيح',
@@ -108,6 +114,12 @@ const ar: Strings = {
   power: 'الطاقة', sleepAfter: 'السكون بعد', lowBatteryAt: 'تنبيه البطارية المنخفضة عند', minutes: 'د',
   mouseChanges: '{n} تغيير', mouseNotYet: 'غير متاح بعد: إعادة تعيين الأزرار وأضواء الدونجل. لم تُنشر بايتاتها لهذه الفأرة بعد.',
   mousePlanTitle: 'سيتم كتابة {n} تقرير إلى الفأرة',
+  tabMad: 'MAD 68 HE', madNone: 'لا توجد لوحة MAD 68 HE متصلة', madConnect: 'توصيل MAD 68 HE',
+  madIntro: 'عائلة MADLIONS MAD68 HE (RGB و Lightless و Ultra و Limited). أغلق تبويب hub.fgg.com.cn الرسمي أولاً؛ يمكن لتطبيق واحد فقط التحدث مع اللوحة في كل مرة.',
+  madReadOnly: 'للقراءة فقط', madCapHint: 'التفعيل (مم) · RT = الزناد السريع مفعّل',
+  madColourNote: 'تصحّح اللوحة الألوان (gamma)، لذا قد يختلف اللون المقروء قليلاً عن اللون الذي اخترته.',
+  madNotYet: 'غير متاح بعد: إعادة تعيين المفاتيح، الماكرو، ألوان لكل مفتاح، SOCD / DKS / المنطقة الميتة. استخدم الموقع الرسمي لها.',
+  madFullTable: 'يُكتب كل جدول متغيّر كاملاً ويُحفظ في ذاكرة اللوحة (بنفس طريقة تطبيق madlions-control المُختبر على الجهاز).',
   lightspeed: 'لاسلكي (LIGHTSPEED)', onboardMode: 'الملف المدمج', hostMode: 'وضع البرنامج', hitsTitle: 'ضبط نقرة SUPERSTRIKE',
   hitsIntro: 'اضبط كل زر رئيسي على حدة: عمق تسجيل النقرة، وسرعة إعادة التفعيل عند بدء التحرير، وقوة النقرة اللمسية.',
   copyLeftRight: 'نسخ اليسار ← اليمين', leftButton: 'الزر الأيسر', rightButton: 'الزر الأيمن', hitsActuation: 'نقطة التفعيل', shallow: 'سطحي (سريع)', deep: 'عميق',

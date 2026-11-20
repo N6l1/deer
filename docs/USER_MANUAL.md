@@ -49,6 +49,16 @@ Pick an effect, then set brightness (0–9) and speed (0–9). Effects can only 
 
 Choose a layer (Base, Fn, Fn2), click a key, then pick what it should send: letters, numbers, symbols, F-keys, navigation, keypad, modifiers, media, mouse, keyboard functions, or Disable. Click the knob to assign its actions. **Reset key** and **Reset all remaps** undo changes.
 
+## MAD 68 HE (MADLIONS)
+
+1. Close the official configurator tab (hub.fgg.com.cn); only one app can use the keyboard at a time. Open the **MAD 68 HE** tab and click **Connect MAD 68 HE**.
+2. DeerTune reads every key's actuation point and rapid-trigger setting, plus the lighting, straight from the keyboard.
+3. Select keys (click, Ctrl/Shift-click, drag, or **WASD** / **All keys**), then set the action point (0.05–3.40 mm) and rapid trigger with its press and release sensitivity.
+4. Turn on **Live travel** to watch each key's depth as you press it. This only reads from the keyboard and never writes.
+5. Click **Save to Keyboard**, check the preview, and press **Send**. The changed tables are written in full and saved to the keyboard's flash, then read back to confirm.
+
+Writes are allowed only when the keyboard reports firmware protocol 9. The MAD68 HE RGB is verified. On other variants (Lightless, Ultra, Limited) DeerTune reads everything but needs *Allow experimental writes* turned on before it writes. Key remapping, macros and per-key RGB still need the official hub.
+
 ## Mouse
 
 Supported: **Razer Viper V4 Pro** and **Logitech PRO X2 SUPERSTRIKE**. One **Connect mouse** button handles both.

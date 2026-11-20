@@ -6,7 +6,7 @@ import { cloneProfile, defaultProfile, uid, type Profile } from '../device/profi
 import type { LogEntry } from '../device/transport';
 import type { Lang } from '../i18n';
 
-export type Tab = 'performance' | 'colour' | 'remap' | 'mouse';
+export type Tab = 'performance' | 'colour' | 'remap' | 'mouse' | 'mad68';
 
 export interface Settings {
   dryRun: boolean;

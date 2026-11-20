@@ -10,6 +10,7 @@ import { Badge, Button, Card, Modal, Row, Toggle, confirmAsk, cx } from './commo
 import { Logo } from './Logo';
 import { useMouse } from '../state/mouse';
 import { useLogi } from '../state/logitech';
+import { useMad } from '../state/madlions';
 
 const REPO = 'https://github.com/N6l1/deer';
 const OFFICIAL_FIRMWARE = 'https://drunkdeer.com/pages/drunkdeer-antler';
@@ -20,7 +21,7 @@ export function TopBar({ onSettings }: { onSettings: () => void }) {
   const setTab = useApp((s) => s.setTab);
   const settings = useApp((s) => s.settings);
   const setSettings = useApp((s) => s.setSettings);
-  const tabs: [Tab, Parameters<typeof t>[0]][] = [['colour', 'tabColour'], ['performance', 'tabPerformance'], ['remap', 'tabRemap'], ['mouse', 'tabMouse']];
+  const tabs: [Tab, Parameters<typeof t>[0]][] = [['colour', 'tabColour'], ['performance', 'tabPerformance'], ['remap', 'tabRemap'], ['mad68', 'tabMad'], ['mouse', 'tabMouse']];
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur">
       <div className="flex flex-wrap items-center gap-3 px-4 py-2.5">
@@ -50,7 +51,7 @@ export function TopBar({ onSettings }: { onSettings: () => void }) {
           <Button variant="ghost" title={t('settings')} onClick={onSettings}>⚙</Button>
         </div>
       </div>
-      {tab !== 'mouse' && <ConnectionStrip />}
+      {tab !== 'mouse' && tab !== 'mad68' && <ConnectionStrip />}
       <DryRunBanner />
     </header>
   );
@@ -65,10 +66,13 @@ function DryRunBanner() {
   const dry = useApp((s) => s.settings.dryRun);
   const setSettings = useApp((s) => s.setSettings);
   const logi = useLogi(useShallow((s) => ({ status: s.status, kind: s.kind })));
+  const mad = useMad(useShallow((s) => ({ status: s.status, kind: s.kind })));
   const real =
     tab === 'mouse'
       ? (mouse.status === 'connected' && mouse.kind !== 'mock') || (logi.status === 'connected' && logi.kind !== 'mock')
-      : c.status === 'connected' && c.kind !== 'mock';
+      : tab === 'mad68'
+        ? mad.status === 'connected' && mad.kind !== 'mock'
+        : c.status === 'connected' && c.kind !== 'mock';
   if (!dry || !real) return null;
   return (
     <div className="flex flex-wrap items-center gap-3 border-t border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm text-sky-200">
