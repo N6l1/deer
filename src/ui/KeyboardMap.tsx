@@ -62,7 +62,7 @@ export function KeyboardMap(p: KeyboardMapProps) {
     if (mode === 'paint') {
       drag.current = { ...pt, base: [], additive, moved: false, slot, painting: true };
       if (slot !== null) p.onPaint?.(slot);
-    } else drag.current = { ...pt, base: additive ? p.selection : [], additive, moved: false, slot, painting: false };
+    } else drag.current = { ...pt, base: p.selection, additive, moved: false, slot, painting: false };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -92,19 +92,15 @@ export function KeyboardMap(p: KeyboardMapProps) {
     setBox(null);
     if (!d || d.painting || d.moved) return;
     const slot = d.slot;
-    if (slot === null) {
-      if (mode === 'select' && !d.additive) p.onSelect?.([]);
-      return;
-    }
+    // Clicking empty space does nothing: selections only change by clicking keys, dragging, or the Clear button.
+    if (slot === null) return;
     if (mode === 'single') return p.onSelect?.([slot]);
     if (e.shiftKey && anchor.current !== null) {
       const [a, b] = [order.indexOf(anchor.current), order.indexOf(slot)].sort((x, y) => x - y);
       p.onSelect?.([...new Set([...p.selection, ...order.slice(a, (b ?? 0) + 1)])]);
-    } else if (e.ctrlKey || e.metaKey) {
-      p.onSelect?.(p.selection.includes(slot) ? p.selection.filter((s) => s !== slot) : [...p.selection, slot]);
-      anchor.current = slot;
     } else {
-      p.onSelect?.([slot]);
+      // Every click toggles: a selected key stays selected until it is clicked again.
+      p.onSelect?.(p.selection.includes(slot) ? p.selection.filter((s) => s !== slot) : [...p.selection, slot]);
       anchor.current = slot;
     }
   };

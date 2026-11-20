@@ -266,12 +266,24 @@ function SocdCard() {
           variant="solid"
           disabled={!two || !free.length}
           title={!free.length ? t('socdNoSlot') : t('socdPick')}
-          onClick={() => two && free[0] !== undefined && m.setDraft((x) => void (x.advanced![free[0]!] = socdSlot(x.advanced![free[0]!]!, two[0]!, two[1]!, mode)))}
+          onClick={() => {
+            if (!two || free[0] === undefined) return;
+            m.setDraft((x) => void (x.advanced![free[0]!] = socdSlot(x.advanced![free[0]!]!, two[0]!, two[1]!, mode)));
+            m.setSelection([]);
+          }}
         >
           + {t('socdAdd')}
         </Button>
       </div>
-      <p className="mt-2 text-[11px] text-mute">{!free.length ? t('socdNoSlot') : t('socdPick')}</p>
+      <p className="mt-2 text-[11px] text-mute">
+        {!free.length
+          ? t('socdNoSlot')
+          : two
+            ? `${label(two[0]!)} ⇄ ${label(two[1]!)}`
+            : m.selection.length === 1
+              ? `${label(m.selection[0]!)} ⇄ …`
+              : t('socdPick')}
+      </p>
       {others > 0 && <p className="mt-1 text-[11px] text-mute">{t('socdOther', { n: others })}</p>}
     </Card>
   );

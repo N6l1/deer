@@ -342,7 +342,7 @@ function PairsPanel({ layout }: { layout: Layout }) {
         <div className="mb-3">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span>{t('lastWin')}</span>
-            <Button variant="solid" disabled={!two} title={t('pickTwo')} onClick={() => two && update((p) => void p.lastWin.pairs.push(two))}>+ {t('addPair')}</Button>
+            <Button variant="solid" disabled={!two} title={t('pickTwo')} onClick={() => two && (update((p) => void p.lastWin.pairs.push(two)), useApp.getState().setSelection([]))}>+ {t('addPair')}</Button>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {profile.lastWin.pairs.map(([a, b], i) => (
@@ -359,7 +359,7 @@ function PairsPanel({ layout }: { layout: Layout }) {
               p.rdt.pairs.push(two);
               // the official driver bumps the release key's upstroke to 1.5 mm so firmware treats it as a release target
               if ((p.us[two[1]] ?? 0) <= 0) p.us[two[1]] = 1.5;
-            })}>+ {t('addPair')}</Button>
+            }) || useApp.getState().setSelection([])}>+ {t('addPair')}</Button>
           </div>
           <div className="mb-3 flex flex-wrap gap-1.5">
             {profile.rdt.pairs.map(([a, b], i) => (

@@ -31,7 +31,7 @@ Edits are kept in the current profile. The **Save to Keyboard** button shows how
 
 ## Performance
 
-- **Selecting keys:** click a key; Ctrl/⌘-click to add or remove one; Shift-click to select a range; drag across empty space to box-select. The quick buttons select WASD, all keys, letters or the number row.
+- **Selecting keys:** click a key to select it and click it again to deselect it; selected keys stay selected until you do. Shift-click selects a range, dragging box-selects several, and **Clear** deselects everything. The quick buttons select WASD, all keys, letters or the number row.
 - **Set Action Point:** drag the vertical slider, type a value, or use the ↑/↓ arrow keys (↑ shallower, ↓ deeper, hold Shift for steps of 10). On A75 Pro firmware 0.017 and later the range is 0.20–2.00 mm in 0.01 mm steps. Older firmware uses 0.2–3.3 mm in 0.1 mm steps.
 - Each keycap shows **actuation · downstroke · upstroke**. Values you changed since the last save are highlighted.
 - **Rapid Trigger Mode** shows the press and release sensitivity sliders for the selected keys.
@@ -56,7 +56,7 @@ Choose a layer (Base, Fn, Fn2), click a key, then pick what it should send: lett
 3. Select keys (click, Ctrl/Shift-click, drag, or **WASD** / **All keys**), then set the action point (0.05–3.40 mm) and rapid trigger with its press and release sensitivity.
 4. Turn on **Live travel** to watch each key's depth as you press it. This only reads from the keyboard and never writes.
 5. **Keyboard layout:** pick **Windows** or **Mac**. Mac mode swaps the modifiers for macOS, so Win becomes ⌘ Command and Alt becomes ⌥ Option. The other keyboard switches (Win lock, NKRO and so on) are left as they are.
-6. **SOCD:** select two keys (for example click A, then Ctrl-click D), choose how conflicts resolve (last input wins, first key wins, second key wins, or neutral), and click **Add pair from selection**. You can change a pair's mode or remove it with ×. Up to 16 slots are available; slots the official hub uses for rapid snappy or OKS are left alone.
+6. **SOCD:** click two keys (for example A, then D), choose how conflicts resolve (last input wins, first key wins, second key wins, or neutral), and click **Add pair from selection**. You can change a pair's mode or remove it with ×. Up to 16 slots are available; slots the official hub uses for rapid snappy or OKS are left alone.
 7. Click **Save to Keyboard**, check the preview, and press **Send**. The changed tables are written in full and saved to the keyboard's flash, then read back to confirm.
 
 Writes are allowed only when the keyboard reports firmware protocol 9. The MAD68 HE RGB is verified. On other variants (Lightless, Ultra, Limited) DeerTune reads everything but needs *Allow experimental writes* turned on before it writes. Key remapping, macros and per-key RGB still need the official hub.
